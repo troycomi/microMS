@@ -9,38 +9,29 @@ class blbPopupWindow(QtGui.QDialog):
     '''
     Window for setting blob finding parameters
     '''
-    def __init__(self, blbFinder, parent=None):
+    def __init__(self, parent=None):
         '''
         setup GUI and populate with current values
         blobFinder: the blob finding object
         parent: the parent, calling widget, a MicroMSQTWindow
         '''
-        super(blbPopupWindow,self).__init__()
+        super(blbPopupWindow,self).__init__(parent)
 
         self.master = parent        
         
         self.setWindowTitle("Blob Find Entry")        
         
         #user input widgets
-        self.blobFinder = blbFinder
         self.minText = QtGui.QLineEdit(self)
-        self.minText.setText( str(blbFinder.minSize))
         self.maxText = QtGui.QLineEdit(self)
-        self.maxText.setText('' if blbFinder.maxSize is None else str(blbFinder.maxSize))
         self.minCirText = QtGui.QLineEdit(self)
-        self.minCirText.setText( str(blbFinder.minCircularity))
         self.maxCirText = QtGui.QLineEdit(self)
-        self.maxCirText.setText('' if blbFinder.maxCircularity is None 
-                                else str(blbFinder.maxCircularity))
         self.intens = QtGui.QLineEdit(self)
-        self.intens.setText(str(blbFinder.threshold))
         self.imgInd = QtGui.QLineEdit(self)
-        self.imgInd.setText(str(blbFinder.imageIndex+1))
         self.channel = QtGui.QComboBox(self)
         self.channel.addItem("Red")
         self.channel.addItem("Green")
         self.channel.addItem("Blue")
-        self.channel.setCurrentIndex(blbFinder.colorChannel)
 
         #add to vbox layout with labels
         vbox = QtGui.QVBoxLayout()
@@ -64,6 +55,18 @@ class blbPopupWindow(QtGui.QDialog):
         
         self.setLayout(vbox)
         
+    def loadParams(self, blbFinder):
+        self.blobFinder = blbFinder
+        self.minText.setText( str(blbFinder.minSize))
+        self.maxText.setText('' if blbFinder.maxSize is None else str(blbFinder.maxSize))
+        self.minCirText.setText( str(blbFinder.minCircularity))
+        self.maxCirText.setText('' if blbFinder.maxCircularity is None 
+                                else str(blbFinder.maxCircularity))
+        self.intens.setText(str(blbFinder.threshold))
+        self.imgInd.setText(str(blbFinder.imageIndex+1))
+        self.channel.setCurrentIndex(blbFinder.colorChannel)
+
+
     def setParams(self):
         '''
         sets the parameters for blob finding based on the current GUI values
@@ -110,31 +113,32 @@ class gridPopupWindow(QtGui.QDialog):
     '''
     displays a table with the current intermediate map of the mapper for the user to edit
     '''
-    def __init__(self, model):
+    def __init__(self, parent):
         '''
         populate the GUI with previous points
         previousPoints: list of triples of the set coordinate and its x and y physical position
         parent: the microMSQT window calling the popup
         '''
-        super(gridPopupWindow,self).__init__()
+        super(gridPopupWindow,self).__init__(parent)
+        
+        self.setWindowTitle("Stage Locations")
+        vbox = QtGui.QVBoxLayout()
+        self.table = QtGui.QTableWidget(self)
+        vbox.addWidget(self.table)
+        self.setLayout(vbox)
+        
+    def loadParams(self, model):
 
         self.model = model
         previousPoints = model.coordinateMapper.getIntermediateMap()
-        
-        self.setWindowTitle("Stage Locations")
-
-        vbox = QtGui.QVBoxLayout()
-        self.table = QtGui.QTableWidget(self)
         
         self.table.setRowCount(len(previousPoints))
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Coord","X","Y"])
         self.table.update()
-        vbox.addWidget(self.table)
         for i,m in enumerate(previousPoints):
             for j,el in enumerate(m):
                 self.table.setItem(i,j,QtGui.QTableWidgetItem(str(el)))
-        self.setLayout(vbox)
 
     def closeEvent(self,evnt):
         '''
@@ -149,7 +153,7 @@ class gridPopupWindow(QtGui.QDialog):
 
         self.model.coordinateMapper.setIntermediateMap(result)
         #close
-        super(gridPopupWindow, self).closeEvent(evnt)
+        self.hide()
 
 class histPopupWindow(QtGui.QDialog):
     '''
@@ -161,29 +165,21 @@ class histPopupWindow(QtGui.QDialog):
         histCanvas: a histCanvas widget contained within parent
         parent: a microMSQT window
         '''
-        super(histPopupWindow,self).__init__()
+        super(histPopupWindow,self).__init__(parent)
 
         self.master = parent        
-        self.hist = histCanvas
         
         self.setWindowTitle("Histogram Options")        
         
         #generate user io widgets
         self.imgInd = QtGui.QLineEdit(self)
-        self.imgInd.setText(str(self.hist.imgInd+1))
         self.channel = QtGui.QComboBox(self)
-        for m in self.hist.metrics:
-            self.channel.addItem(m)
 
-        self.channel.setCurrentIndex(self.hist.populationMetric)
         self.offset = QtGui.QLineEdit(self)
-        self.offset.setText(str(self.hist.offset))
         self.max = QtGui.QRadioButton(self)
         self.max.setText('Max Intensity')
         self.mean = QtGui.QRadioButton(self)
         self.mean.setText('Average Intensity')
-        self.mean.setChecked(not self.hist.reduceMax)
-        self.max.setChecked(self.hist.reduceMax)
 
         #add to vbox layout with labels
         vbox = QtGui.QVBoxLayout()
@@ -202,6 +198,21 @@ class histPopupWindow(QtGui.QDialog):
         
         self.setLayout(vbox)
         
+        
+    def loadParams(self, histCanvas):
+
+        self.hist = histCanvas     
+        
+        #generate user io widgets
+        self.imgInd.setText(str(self.hist.imgInd+1))
+        for m in self.hist.metrics:
+            self.channel.addItem(m)
+
+        self.channel.setCurrentIndex(self.hist.populationMetric)
+        self.offset.setText(str(self.hist.offset))
+        self.mean.setChecked(not self.hist.reduceMax)
+        self.max.setChecked(self.hist.reduceMax)
+
     def setParams(self):
         '''
         trigger to set the new histogram parameters and redraw the histogram
