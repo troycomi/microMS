@@ -219,6 +219,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             SlideWrapper.generateDecimatedImgs(fileName)
             #open file once done
             self.setupCanvas(fileName)
+            self.raise_()
+            self.activateWindow()
 
     def decimateImageSingle(self, extras = None):
         '''
@@ -237,6 +239,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             SlideWrapper.generateDecimatedImage(path, file)
             #open file once done
             self.setupCanvas(fileName)
+            self.raise_()
+            self.activateWindow()
 
     def decimateDirectory(self, extras = None):
         '''
@@ -250,6 +254,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
         if directory:
             SlideWrapper.decimateDirectory(directory)
+            self.raise_()
+            self.activateWindow()
 
     def setupCanvas(self, fileName):
         '''
@@ -441,6 +447,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     self.tspOpt.isChecked(),
                     maxnum)
             )
+            self.raise_()
+            self.activateWindow()
                  
     def saveFiducialPositions(self, extras = None):
         '''
@@ -669,6 +677,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             if self.showHist:
                 self.histCanvas.calculateHist()
             self.slideCanvas.draw()
+            self.raise_()
+            self.activateWindow()
 
     def rectPack(self, extras = None):
         '''
