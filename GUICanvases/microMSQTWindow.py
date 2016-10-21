@@ -120,7 +120,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.tools_menu = QtGui.QMenu('&Tools',self)
 
         #cell find
-        self.tools_menu.addAction('&Cell Find', self.globalCell)
+        self.tools_menu.addAction('&Blob Find', self.globalCell)
         #blob options
         self.tools_menu.addAction('&Blob Options',self.blbPopup,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_B)
@@ -318,7 +318,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
         if ok:
             self.statusBar().showMessage(
-                self.model.saveCurrentBlobFinding(os.path.join(self.directory, text+"_find.txt"))
+                self.model.saveCurrentBlobFinding(os.path.join(self.directory, text+".txt"))
             )
             self.statusBar().showMessage(
                 self.model.saveCoordinateMapper(os.path.join(self.directory, text+".msreg"))
