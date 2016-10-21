@@ -1,0 +1,26 @@
+<!-- $Revision: 1.5 $-->
+<PlateType>
+	<GlobalParameters PlateTypeName="MTP Slide Adapter II" ProbeType="MTP"
+	                  RowsNumber="100" ChipNumber="1" ChipsInRow="1"
+	                  X_ChipOffsetSize="0" Y_ChipOffsetSize="0"
+	                  HasDirectLabels="false" HasColRowLabels="true"
+	                  HasNearNeighbourCalibrants="false"
+	                  ProbeDiameterX="103.5" SampleDiameter="2"
+	                  SamplePixelRadius="5" ZoomFactor="1"
+	                  FirstCalibrant="TPX1" SecondCalibrant="TPX2" ThirdCalibrant="TPX3"
+	                  />
+	<MappingParameters mox="56.239998" moy="42.635009" sinphi="0.000000" cosphi="1.000000" alpha="51.750000" beta="51.750000" tansigma="0.000000"/>
+	<PlateSpots PositionNumber="1">
+		<PlateSpot PositionIndex="0" PositionName="x_870y_858" UnitCoord_X="0.036593" UnitCoord_Y="1.177348"/>
+	</PlateSpots>
+    	<AutoTeachSpots>
+    		<PlateSpot PositionIndex="0" PositionName="TPX1" UnitCoord_X="-0.729469" UnitCoord_Y="0.550725"/>
+    		<PlateSpot PositionIndex="1" PositionName="TPX2" UnitCoord_X="0.729469" UnitCoord_Y="0.550725"/>
+    		<PlateSpot PositionIndex="2" PositionName="TPX3" UnitCoord_X="0.729469" UnitCoord_Y="0.057971"/>
+    		<PlateSpot PositionIndex="3" PositionName="TPX4" UnitCoord_X="-0.729469" UnitCoord_Y="0.057971"/>
+    		<PlateSpot PositionIndex="4" PositionName="TPY1" UnitCoord_X="-0.729469" UnitCoord_Y="-0.057971"/>
+    		<PlateSpot PositionIndex="5" PositionName="TPY2" UnitCoord_X="0.729469" UnitCoord_Y="-0.057971"/>
+    		<PlateSpot PositionIndex="6" PositionName="TPY3" UnitCoord_X="-0.729469" UnitCoord_Y="-0.550725"/>
+    		<PlateSpot PositionIndex="7" PositionName="TPY4" UnitCoord_X="0.729469" UnitCoord_Y="-0.550725"/>
+    	</AutoTeachSpots>
+    </PlateType>
