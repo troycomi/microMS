@@ -113,7 +113,7 @@ class gridPopupWindow(QtGui.QDialog):
     '''
     displays a table with the current intermediate map of the mapper for the user to edit
     '''
-    def __init__(self, parent):
+    def __init__(self, parent = None):
         '''
         populate the GUI with previous points
         previousPoints: list of triples of the set coordinate and its x and y physical position
