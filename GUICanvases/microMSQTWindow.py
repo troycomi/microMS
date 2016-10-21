@@ -813,6 +813,15 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.model.setBlobSubset(blbSubset)
         self.slideCanvas.draw()
         
+    def messageBox(self, message, title):
+        msg = QtGui.QMessageBox(self)
+        msg.setWindowIcon(self.windowIcon())
+        msg.setText(message)
+        msg.setWindowTitle(title)
+        msg.setStandardButtons(QtGui.QMessageBox.Ok)
+        msg.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        msg.setModal(False)
+        msg.show()
     
     '''
     These are popup messages with the hotkeys defined in the included canvases
@@ -841,9 +850,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         "RMB\t\tAdd slide coordinate\n"
         "RMB+Shift\tRemove slide coordinate\n"
         "Scroll\t\tZoom in/out")
-        QtGui.QMessageBox.about(self,
-                                "Hotkeys",
-                                msg)
+        self.messageBox(msg, "Image Hotkeys")
         
     def instHotkeyMsg(self):
         msg = ("i,k,j,l\t\tMove\n"
@@ -857,9 +864,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         "RMB\t\tAdd coordinate\n"
         "RMB+Shift\tRemove coordinate\n"
         )
-        QtGui.QMessageBox.about(self,
-                                "Hotkeys",
-                                msg)
+        self.messageBox(msg, "Instrument Hotkeys")
         
     def histHotkeyMsg(self):
         msg = ("LMB\t\tSet lower threshold\n"
@@ -868,9 +873,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         "RMB\t\tSet upper threshold\n"
         "RMB+Shift\tSet upper cutoff\n"
         "Scroll\t\tZoom in/out")
-        QtGui.QMessageBox.about(self,
-                                "Hotkeys",
-                                msg)
+        self.messageBox(msg, "Histogram Hotkeys")
                 
     def keyPressEvent(self, event):
         '''
