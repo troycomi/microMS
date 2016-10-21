@@ -435,10 +435,13 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 else:
                     return
 
-                reply = QtGui.QMessageBox.question(self, 'Run TSP optimization?',
-                                                   'Not recommended for over {} targets\nCurrently have {}'.format(
-                                                       GUIConstants.TSP_LIMIT, min(self.model.currentBlobLength(), maxnum)),
-                                                   QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                maxnum = min(self.model.currentBlobLength(), maxnum)
+
+                reply = QtGui.QMessageBox.question(self, 'Run optimization?',
+                                                   'Perform TSP optimization?\nNot recommended for over {} targets\nCurrently have {}'.format(
+                                                       GUIConstants.TSP_LIMIT, maxnum),
+                                                   buttons = QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
+                                                   defaultButton = QtGui.QMessageBox.Yes if maxnum < GUIConstants.TSP_LIMIT else QtGui.QMessageBox.No)
                 tsp = reply == QtGui.QMessageBox.Yes
             else:
                 maxnum = extras.maxnum
