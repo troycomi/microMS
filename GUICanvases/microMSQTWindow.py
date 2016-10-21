@@ -139,10 +139,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         #blob options
         self.tools_menu.addAction('&Blob Options',self.blbPopup,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_B)
-        #tsp optimize toggle
-        self.tspOpt = QtGui.QAction('TSP Optimize', self.tools_menu, checkable=True)
-        self.tspOpt.setChecked(True)
-        self.tools_menu.addAction(self.tspOpt)
         #limit drawn cells toggle
         self.limitDraw = QtGui.QAction('Limit Drawn Cells', self.tools_menu, checkable=True)
         self.limitDraw.setChecked(True)
@@ -431,22 +427,29 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             if extras is None or not hasattr(extras, 'fileName'):
                 text,ok = QtGui.QInputDialog.getText(self, "Input Required",  
                                                         "Input max number of spots  or OK for all " + str(self.model.currentBlobLength()) )
-            else:
-                ok = extras.ok
-                text = extras.text
                                 
-            if ok and not text == '':
-                maxnum = int(float(text))
-            elif ok:
-                maxnum = 0
+                if ok and not text == '':
+                    maxnum = int(float(text))
+                elif ok:
+                    maxnum = self.model.currentBlobLength()
+                else:
+                    return
+
+                reply = QtGui.QMessageBox.question(self, 'Run TSP optimization?',
+                                                   'Not recommended for over {} targets\nCurrently have {}'.format(
+                                                       GUIConstants.TSP_LIMIT, min(self.model.currentBlobLength(), maxnum)),
+                                                   QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                tsp = reply == QtGui.QMessageBox.Yes
             else:
-                return
+                maxnum = extras.maxnum
+                tsp = extras.tsp
             self.statusBar().showMessage(
                 self.model.saveInstrumentPositions(
                     fileName,
-                    self.tspOpt.isChecked(),
+                    tsp,
                     maxnum)
             )
+
             self.raise_()
             self.activateWindow()
                  
@@ -506,8 +509,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.statusBar().showMessage(
                 self.model.loadBlobFinding(fileName)
             )
-            if self.model.currentBlobLength() > GUIConstants.TSP_LIMIT:
-                self.tspOpt.setChecked(False)
             self.slideCanvas.draw()   
 
             self.histCanvas.clearFilt()
@@ -528,7 +529,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.statusBar().showMessage(
                 self.model.loadInstrumentPositions(fileName)
                 )
-            self.tspOpt.setChecked(self.model.currentBlobLength() < GUIConstants.TSP_LIMIT)
             self.slideCanvas.draw()
             
     def fileQuit(self):
@@ -555,8 +555,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.statusBar().showMessage(
             self.model.runGlobalBlobFind()    
         )
-        if self.model.currentBlobLength() > GUIConstants.TSP_LIMIT:
-            self.tspOpt.setChecked(False)
         self.saveAll(extras)
         self.slideCanvas.draw()
         
