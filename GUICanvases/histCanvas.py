@@ -1,0 +1,464 @@
+from __future__ import unicode_literals
+
+
+from GUICanvases.mplCanvas import MplCanvas
+from GUICanvases import GUIConstants
+
+import numpy as np
+from PyQt4 import QtGui, QtCore
+from ImageUtilities.blobFinder import blobFinder
+from ImageUtilities.blobUtilities import blobUtilities
+
+class HistCanvas(MplCanvas):
+    '''
+    HistCanvas is an implementation of MplCanvas that interacts with a slideCanvas 
+    to display population level information on a collection of blob objects.
+    Most of the control logic is contained here as the view is simply a bar chart
+    '''
+    def __init__(self, master, model, *args, **kwargs):
+        '''
+        Initialize and connect listeners
+        master: the master widget, a microMSQT
+        slideCanvas: the connected slideCanvas to interact with
+        '''
+        MplCanvas.__init__(self, *args, **kwargs)
+        self.draw()
+        #start by showing the cell areas
+        self.populationMetric = 3
+        self.populationValues = None
+        self.blobSet = None
+        #the image of the collection from slideWrapper to analyze
+        self.imgInd = 1
+        
+        #listeners for mouse interaction
+        self.mpl_connect('button_release_event', self.mouseUp)
+        self.mpl_connect('scroll_event', self.mouseZoom)
+                                      
+        self.master = master
+        self.model = model
+    
+        #offset from cell radius to consider when extracting fluorescence
+        self.offset = 0
+
+        #x axis limits for zooming
+        self.xlo = None
+        self.xhi = None
+
+        #toggle to indicate if the maximum or average intensity should be displayed
+        self.reduceMax = False
+
+        #a list of the currently available metrics
+        self.metrics = ['Red', 'Green', 'Blue', 'Size', 'Circularity', 'Distance']
+
+        #initialize display variables
+        self.resetVariables()
+
+    def resetVariables(self, resetZoom = True, resetBlobs = False):
+        '''
+        reset variables related to splitting the population and display
+        resetZoom: reset the zoom on the x axis
+        resetBlobs: reset the list of blobs curretly investigated
+        '''
+        #lowIntens and lowLimit hold thresholds for low values of the population
+        #low cells have I such that lowLimit < I < lowIntens
+        self.lowIntens = None
+        self.lowLimit = None
+        #high cells have I such that highIntens < I < highLimit
+        self.highIntens = None
+        self.highLimit = None
+        #single bar is a value bin in the histogram
+        self.singleBar = None
+        #single cell contains the index of a single blob to show the position of in the histogram
+        self.singleCell = None
+
+        if resetZoom:
+            #zoom level on the x axis
+            self.zoomLvl = 0
+            #center of the x axis
+            self.xcent = None        
+
+        if resetBlobs:
+            #the color channel or morphology
+            self.populationMetric = 3
+            #set of population values
+            self.populationValues = None
+            #the actual blob list
+            self.blobSet = None
+
+    def calculateHist(self):
+        '''
+        calculate the population values with either the current set of blobs from the model
+        this can require some calculation time to complete due to repeated disk reads on the image
+        '''
+        #set a new set of global blbs
+        self.blobSet = self.model.blobCollection[self.model.currentBlobs]
+
+        #return immediately if globalBlbs is not set
+        if self.blobSet is None or len(self.blobSet) == 0:
+            self.populationValues = None
+            return
+
+        #metric == 3 -> look at the area (= pi * r^2)
+        if self.populationMetric == 3:
+            self.populationValues = np.array([x.radius*x.radius*3.14 for x in self.blobSet])
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
+
+        #metric == 4 -> look at circularity
+        elif self.populationMetric == 4:
+            self.populationValues = np.array([x.circularity for x in self.blobSet])
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
+
+        #metric == 5 -> look at minimum distance between samples
+        elif self.populationMetric == 5:
+            self.populationValues = np.array(blobUtilities.minimumDistances(self.blobSet))
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
+
+        #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
+        else:
+            self.populationValues = np.array(self.model.slide.getFluorInt(self.blobSet, self.populationMetric, self.imgInd, self.offset, self.reduceMax))
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins=100, range=(0,255),facecolor = GUIConstants.BAR_COLORS[self.populationMetric])
+
+        self.bins = self.bins[1:]
+
+        #reset limits and redraw
+        self.resetVariables()  
+        self.update_figure()
+    
+    def mouseUp(self,event):
+        '''
+        handles click events by updating the high and low limits
+        event: mpl mouse click event
+        '''
+        #click out of bounds
+        if event.xdata is None or event.ydata is None or self.populationValues is None:
+            return
+
+        #LMB to set low values
+        if event.button == 1:
+            #shift LMB to set the lower limit
+            if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier:
+                self.lowLimit = event.xdata
+            #LMB to set a lower threshold
+            else:
+                self.lowIntens = event.xdata
+            #display a message if a lower threshold is set
+            if self.lowIntens is not None:    
+                if self.lowLimit is not None:
+                    self.master.statusBar().showMessage(str(sum((self.populationValues < self.lowIntens) & (self.populationValues > self.lowLimit))) 
+                                                        + ' below {:.1f} and above {:.1f}'.format(self.lowIntens, self.lowLimit))
+                else:
+                    self.master.reportFromModel(str(sum(self.populationValues < self.lowIntens)) 
+                                                        + ' below {:.1f}'.format(self.lowIntens))
+        
+        #MMB to select a single bin
+        if event.button == 2:
+            self.singleBar = event.xdata
+            self.master.reportFromModel('Clicked on {:.1f}'.format(event.xdata))
+        
+        #RMB to set high values
+        if event.button == 3:
+            #shift RMB to set the higher limit
+            if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier:
+                self.highLimit = event.xdata
+
+            #RMB to set the higher threshold
+            else:
+                self.highIntens = event.xdata
+
+            #display message if a higher threshold is set
+            if self.highIntens is not None:    
+                if self.highLimit is not None:
+                    self.master.statusBar().showMessage(str(sum((self.populationValues > self.highIntens) & (self.populationValues < self.highLimit)))
+                                                        + ' above {:.1f} and below {:.1f}'.format(self.highIntens,self.highLimit))
+                else:
+                    self.master.statusBar().showMessage(str(sum(self.populationValues > self.highIntens)) 
+                                                        + ' above {:.1f}'.format(self.highIntens))
+        
+        #redraw figure    
+        self.update_figure()
+
+    def mouseZoom(self,event):
+        '''
+        handle mouse scrolling by zooming in and out
+        event: mpl mouse scroll event
+        '''
+        if self.populationValues is not None and event.xdata is not None:
+
+            if event.button == 'up':
+                self.zoomLvl += 1#zoom in
+            else:
+                self.zoomLvl -= 1#zoom out
+
+            self.zoomLvl = 0 if self.zoomLvl < 0 else (10 if self.zoomLvl > 10 else self.zoomLvl)
+            self.xcent = int(event.xdata)
+
+            #redraw the zoom lvl
+            self.redraw_zoom()
+               
+    def setCellNum(self, target):
+        '''
+        automatically sets a high and low threshold to select 
+        approximately the same number of cells in each condition
+        target: the target number of cells to find
+        '''
+        #return when values not set
+        if self.populationValues is None:
+            return
+        #subdivide the population by a larger factor
+        counts, bins= np.histogram(self.populationValues, bins = 2560)
+
+        #find lower cutoff, binary search
+        left = 0
+        right = len(counts)
+        c = 0
+        lowlimit = 0 if self.lowLimit is None else np.argmin(np.abs(bins - self.lowLimit))
+        while left < right and c < 20:
+            ind = (left + right) // 2
+            tempCount = sum(counts[lowlimit:ind])
+            if tempCount < target:
+                left = ind +1
+            elif tempCount > target:
+                right = ind -1
+            else:
+                break
+            c += 1
+        self.lowIntens = bins[ind+1]
+        tclow =   sum(counts[lowlimit:ind])      
+        
+        #find upper cutoff, binary search
+        left = 0
+        right = len(counts)
+        c = 0
+        highlimit = len(counts)-1 if self.highLimit is None else np.argmin(np.abs(bins - self.highLimit))
+        while left < right and c < 20:
+            ind = (left + right) // 2
+            tempCount = sum(counts[ind:highlimit])
+            if tempCount < target:
+                right = ind -1
+            elif tempCount > target:
+                left = ind +1
+            else:
+                break
+            c += 1
+        self.highIntens = bins[ind-1]
+        tchigh = sum(counts[ind:highlimit])
+        self.update_figure()
+        
+        self.master.reportFromModel('Found ' + str(tclow) + ' below and ' + str(tchigh) + ' above')
+        
+    def clearFilt(self):
+        '''
+        Clear the current set of filter parameters and redraw figure
+        '''
+        self.resetVariables(False)
+        self.update_figure();
+
+    def savePopulationValues(self, filename):
+        '''
+        saves the mopulation values of the currently displayed histogram
+        filename: text file to save
+        '''
+        if self.populationValues is None or len(self.populationValues) == 0:
+            return 'Nothing to save'
+        output = open(filename, 'w')
+        output.write('Cell\t{}\n'.format(self.metrics[self.populationMetric]))
+        for i,b in enumerate(self.model.blobCollection[self.model.currentBlobs]):
+            output.write('0_x_{0:.0f}y_{1:.0f}\t{2}\n'.format(b.X, b.Y, 
+                                                              self.populationValues[i]))
+        return 'Saved histogram values'
+
+    def saveHistImage(self, filename):
+        '''
+        Saves the current histogram image
+        filename: image file to write
+        '''
+        self.fig.savefig(filename)
+
+    def getFilteredBlobs(self):
+        '''
+        Get the set of blobs which pass the current filter
+        Must only have one (high or low) filter else None is returned
+        '''
+        lowblbs = []
+        highblbs = []
+        #low intensity
+        if self.lowIntens is not None:
+            if self.lowLimit is not None:
+                tempbool = (self.populationValues < self.lowIntens) & (self.populationValues > self.lowLimit)
+            else:
+                tempbool = self.populationValues < self.lowIntens
+            lowblbs = [self.blobSet[i] for i in np.where(tempbool)[0]]
+                
+        #high intensity
+        if self.highIntens is not None:
+            if self.highLimit is not None:
+                tempbool = (self.populationValues >  self.highIntens) & (self.populationValues < self.highLimit)
+            else:
+                tempbool = self.populationValues >  self.highIntens
+                
+            highblbs = [self.blobSet[i] for i in np.where(tempbool)[0]]
+
+        #return None if both blobs are present
+        if len(lowblbs) > 0 and len(highblbs) > 0:
+            return None
+
+        #return one or the other
+        if len(lowblbs) > 0:
+            return lowblbs
+        if len(highblbs) > 0:
+            return highblbs
+
+        #no cells in filter
+        return None
+
+    def getFilterDescription(self):
+        '''
+        returns a succienct string description of the current filter set
+        '''
+        result = ''
+        if self.lowIntens is not None and self.highIntens is not None:
+            return None
+
+        channel = 'c{}[{}]'.format(self.imgInd, self.metrics[self.populationMetric])
+
+        if self.lowIntens is not None:
+            if self.lowLimit is not None:
+                result += ("{:.1f}<".format(self.lowLimit))
+            result += '{}<{:.1f};'.format(channel, self.lowIntens)
+
+        elif self.highIntens is not None:
+            result += '{:.1f}<{}'.format(self.highIntens, channel)
+            if self.highLimit is not None:
+                result += '<{:.1f}'.format(self.highLimit)
+            result += ';'
+
+        else:
+            return None
+
+        result += 'max' if self.reduceMax else 'mean'
+        result += ';offset={}'.format(self.offset)
+
+        return result
+
+    def redraw_zoom(self):
+        '''
+        redraw the widget after a zoom change, does not update the underlying graph
+        '''
+        #find range of the x axis scaled by zoom
+        rng = (self.xhi - self.xlo) / 2**(self.zoomLvl+1)
+        #determine center position
+        if self.xcent is None:
+            self.xcent = (self.xhi - self.xlo) / 2
+        #find high and low positions, center +/- range
+        (low, high) = (self.xcent - rng, self.xcent + rng)
+        #keep low and high bounded by the min and max
+        (low, high) = (self.xlo if low < self.xlo else low, self.xhi if high > self.xhi else high)
+        #if no zoom, autoscale
+        if self.zoomLvl == 0: 
+            self.axes.autoscale(True, 'both')
+        else:#autoscale y but use high and low for x
+            self.axes.set_xlim([low,high]) 
+            self.axes.autoscale(True, 'y')            
+
+        self.draw()
+
+    def update_figure(self):
+        '''
+        redraw the figure by recalculating the graph and recoloring
+        The blob subsets are passed back to the model
+        '''
+        if self.populationValues is not None:
+            #draw bar chart of entire population
+            self.axes.bar(self.bins, self.counts, width = self.bins[0] - self.bins[1], 
+                          color = GUIConstants.BAR_COLORS[self.populationMetric])
+            self.axes.hold(True)
+            blbSubset = []
+            #handle low intens
+            if self.lowIntens is not None:
+                if self.lowLimit is not None:
+                    #tempbool is the bins that pass the filter
+                    tempbool = (self.bins < self.lowIntens) & (self.bins > self.lowLimit)
+                    #tempbool2 is the blobs that pass the filter
+                    tempbool2 = (self.populationValues < self.lowIntens) & (self.populationValues > self.lowLimit)
+                else:
+                    tempbool = self.bins < self.lowIntens
+                    tempbool2 = self.populationValues < self.lowIntens
+                #draw the low threshold bars
+                self.axes.bar(self.bins[tempbool], self.counts[tempbool], 
+                              width = self.bins[0]-self.bins[1], color = GUIConstants.LOW_BAR)
+                #add the low threshold blobs to the blob subset to pass to slideCanvas
+                if np.any(tempbool2):
+                    lowblbs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
+                    blbSubset.append((lowblbs, GUIConstants.LOW_BAR, 'low', int(self.lowIntens)))
+                
+            #handle high intens
+            if self.highIntens is not None:
+                if self.highLimit is not None:
+                    tempbool = (self.bins >  self.highIntens) & (self.bins < self.highLimit)
+                    tempbool2 = (self.populationValues >  self.highIntens) & (self.populationValues < self.highLimit)
+                else:
+                    tempbool = self.bins >  self.highIntens
+                    tempbool2 = self.populationValues >  self.highIntens
+                #draw the high threshold bars
+                self.axes.bar(self.bins[tempbool], self.counts[tempbool], 
+                              width = self.bins[0]-self.bins[1], color = GUIConstants.HIGH_BAR)
+                #add the high threshold blobs to the blob subset to pass to slideCanvas
+                if np.any(tempbool2):
+                    highblbs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
+                    blbSubset.append((highblbs, GUIConstants.HIGH_BAR, 'high', int(self.highIntens)))
+
+            #handle single bar selected
+            if self.singleBar is not None:
+                temp = self.bins - self.singleBar
+                ind = int(np.sum(temp < 0))
+                ind = 1 if ind < 1 else len(self.bins)-1 if ind > len(self.bins) else ind
+                #draw the single bar
+                self.axes.bar(self.bins[ind], self.counts[ind], 
+                              width = self.bins[0]-self.bins[1], color = GUIConstants.SINGLE_BAR)
+                #add the single bar blobs to the subset for slideCanvas
+                if np.any((self.populationValues < self.bins[ind]) & (self.populationValues >= self.bins[ind-1])):
+                    singleBlbs = [self.blobSet[i] for i in np.where((self.populationValues < self.bins[ind]) 
+                                                                       & (self.populationValues >= self.bins[ind-1]))[0]]
+                    blbSubset.append((singleBlbs, GUIConstants.SINGLE_BAR, 'single', int(self.bins[ind])))
+
+            #draw lines displaying the values used for filtering
+            #a single blob to highlight
+            if self.singleCell is not None:
+                if self.singleCell > 0 and self.singleCell < len(self.populationValues):
+                    self.axes.vlines(self.populationValues[self.singleCell], 0, 
+                                     self.axes.get_ylim()[1], colors = GUIConstants.SINGLE_CELL)
+            #draw limits
+            if self.lowLimit is not None:
+                self.axes.vlines(self.lowLimit, 0, self.axes.get_ylim()[1], colors = GUIConstants.LOW_BAR, linestyles='dashed')
+            if self.highLimit is not None:
+                self.axes.vlines(self.highLimit, 0, self.axes.get_ylim()[1], colors = GUIConstants.HIGH_BAR, linestyles='dashed')
+            
+            #draw thresholds
+            if self.lowIntens is not None:
+                self.axes.vlines(self.lowIntens, 0, self.axes.get_ylim()[1], colors = GUIConstants.LOW_BAR, linestyles='dashdot')
+            if self.highIntens is not None:
+                self.axes.vlines(self.highIntens, 0, self.axes.get_ylim()[1], colors = GUIConstants.HIGH_BAR, linestyles='dashdot')
+
+            #tell slide canvas about the new subset
+            self.master.report_blbsubset(blbSubset)
+
+        self.axes.hold(False)
+        #update the axes labels and x axis limits
+        self.axes.set_ylabel('Count')
+        if self.populationMetric == 3:
+            self.axes.set_xlabel('Size')
+            self.xlo, self.xhi = self.axes.get_xlim()
+        elif self.populationMetric == 4:
+            self.axes.set_xlabel('Circularity')
+            self.xlo, self.xhi = self.axes.get_xlim()
+        elif self.populationMetric == 5:
+            self.axes.set_xlabel('Distance')
+            self.xlo, self.xhi = self.axes.get_xlim()
+
+        #colors are labeled as intensity and limited to 0,255 
+        else:
+            self.xlo, self.xhi = 0,255
+            self.axes.set_xlabel('Intensity')
+
+        self.redraw_zoom()
+        
