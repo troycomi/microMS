@@ -202,8 +202,7 @@ class blobFinder(object):
         returns a list of blobs in image
         subSize: size in pixels of one side of the subregion to iterate over
             larger values may use up lots of RAM
-        topL: (x,y) position of the top left of a rectangular ROI
-        botR: (x,y) position of the bottom right of a rectangular ROI
+        ROI: a list of two points for a rectangular ROI or more for a polygon
         '''
         #the amount of overlap between regions, would matter with larger objects but I currently ignore this
         overlap = 0
@@ -212,7 +211,7 @@ class blobFinder(object):
         if ROI is None or len(ROI) < 2:
             botR = self.slide.getSize()
             topL = (0,0)
-
+            ROI = [topL, botR]
         else:
             topL = (min(map(lambda x: x[0], ROI)),
                     min(map(lambda x: x[1], ROI)))

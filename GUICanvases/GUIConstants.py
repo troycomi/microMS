@@ -54,3 +54,49 @@ DEBUG_IMG_FILE          =   r'T:\Cerebellum One Left Stitched _\Cerebellum One L
 DEBUG_CELL_FIND         =   r'T:\Cerebellum One Left Stitched _\sol_find.txt'
 #registration file
 DEBUG_REG_FILE          =   r'T:\Cerebellum One Left Stitched _\sol.msreg'
+
+###help message text
+IMAGE_HOTKEYS           =   ("w,s,a,d\t\tMove\n"
+        "W,S,A,D\tMove Farther\n"
+        "q,e\t\tZoom out/in\n"
+        "r\t\tReset view\n"
+        "t\t\tSwitch views\n"
+        "b\t\tTest cell find\n"
+        "B\t\tSwitch to threshold view\n"
+        "m\t\tMirror x axis\n"
+        "p\t\tToggle predicted location\n"
+        "o\t\tToggle drawn shapes\n"
+        "O\t\tToggle drawing all cell lists\n"
+        "C\t\tClear found cells\n"
+        "c\t\tClear ROI\n\n"
+        "#\t\tToggle channel\n"
+        "Ctrl+#\t\tSet channel\n"
+        "Alt+#\t\tSet manual cell list\n\n"
+        "LMB\t\tMove to center\n"
+        "LMB+Shift\tAdd/remove points\n"
+        "LMB+Ctrl\tDraw ROI\n"
+        "MMB\t\tGet pixel values\n"
+        "RMB\t\tAdd slide coordinate\n"
+        "RMB+Shift\tRemove slide coordinate\n"
+        "Scroll\t\tZoom in/out"
+        )
+
+INSTRUMENT_HOTKEYS      =   ("i,k,j,l\t\tMove\n"
+        "I,K,J,L\t\tMove Farther\n"
+        "+,-\t\tMove probe up/down\n"
+        "V\t\tSet probe position\n"
+        "v\t\tToggle probe position\n"
+        "h\t\tHome stage\n"
+        "x\t\tSingle analysis\n\n"
+        "LMB+Alt\tMove to spot\n"
+        "RMB\t\tAdd coordinate\n"
+        "RMB+Shift\tRemove coordinate\n"
+        )
+
+HISTOGRAM_HOTKEYS       =   ("LMB\t\tSet lower threshold\n"
+        "LMB+Shift\tSet lower cutoff\n"
+        "MMB\t\tSet single bar\n"
+        "RMB\t\tSet upper threshold\n"
+        "RMB+Shift\tSet upper cutoff\n"
+        "Scroll\t\tZoom in/out")
+

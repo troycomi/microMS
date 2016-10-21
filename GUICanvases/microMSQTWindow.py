@@ -49,6 +49,15 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
+
+        self.popups = {
+            'imageHelp'     :   self.createMessageBox(GUIConstants.IMAGE_HOTKEYS, 'Image Help'),
+            'instHelp'      :   self.createMessageBox(GUIConstants.INSTRUMENT_HOTKEYS, 'Instrument Help'),
+            'histHelp'      :   self.createMessageBox(GUIConstants.HISTOGRAM_HOTKEYS, 'Histogram Help'),
+            'blobFind'      :   blbPopupWindow(self),
+            'grid'          :   gridPopupWindow(self),
+            'histOpts'      :   histPopupWindow(self)
+            }
         
         self.setupMenu()
 
@@ -88,20 +97,26 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         saveSub = QtGui.QMenu('&Save...',self)
         self.file_menu.addMenu(saveSub)
         
-        saveSub.addAction('&Image', self.saveImg,
-                          QtCore.Qt.CTRL + QtCore.Qt.Key_S)
-        saveSub.addAction('&Whole Image', self.saveWholeImg)
+
+        saveSub.addAction('&Instrument Positions', self.saveInstrumentPositions)
+        saveSub.addAction('&Fiducial Positions', self.saveFiducialPositions)
+
         saveSub.addSeparator()
-        saveSub.addAction('&All', self.saveAll)
-        saveSub.addSeparator()
+
         saveSub.addAction('&Registration', self.saveReg)
         saveSub.addAction('&Current Cells', self.saveCurrentFind)
         saveSub.addAction('&Histogram Divisions', self.saveHistogramBlobs)
         saveSub.addAction('All Lists of Cells', self.saveAllBlobs)
-        saveSub.addSeparator()
 
-        saveSub.addAction('&Sample Positions', self.saveInstrumentPositions)
-        saveSub.addAction('&Fiducial Positions', self.saveFiducialPositions)
+        saveSub.addSeparator()
+        
+        saveSub.addAction('&Image', self.saveImg,
+                          QtCore.Qt.CTRL + QtCore.Qt.Key_S)
+        saveSub.addAction('&Whole Image', self.saveWholeImg)
+
+        saveSub.addSeparator()
+        saveSub.addAction('Save Histogram Image',self.histSaveImage)
+        saveSub.addAction('Save Histogram Values',self.histSaveValues)
         
         #load submenu
         loadSub = QtGui.QMenu('&Load...',self)
@@ -109,7 +124,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         
         loadSub.addAction('&Registration', self.loadReg)
         loadSub.addAction('&Found Cells', self.loadCellFind)
-        loadSub.addAction('&Sample Positions', self.loadInstrumentPositions)
+        loadSub.addAction('&Instrument Positions', self.loadInstrumentPositions)
         
         #quit button
         self.file_menu.addAction('&Quit', self.fileQuit,
@@ -138,8 +153,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_F)
         self.tools_menu.addAction('Histogram Options',self.histOptions)
         self.tools_menu.addAction('Pick Extremes',self.histSelect)
-        self.tools_menu.addAction('Save Histogram Image',self.histSaveImage)
-        self.tools_menu.addAction('Save Histogram Values',self.histSaveValues)
         self.tools_menu.addAction('Apply Filter',self.histFilter,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_A)
         #cell position options
@@ -268,11 +281,14 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         '''
         save the image of the image canvas to the selected location
         '''
+        if self.model.slide is None:
+            self.statusBar().showMessage("No image to save")
+            return
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtGui.QFileDialog.getSaveFileName(self,
-                                                     "Select save file",
-                                                     self.directory,
-                                                     filter='*.png')
+                                                        "Select save file",
+                                                        self.directory,
+                                                        filter='*.png')
 
         else:
             fileName = extras.fileName
@@ -541,8 +557,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         popup the blob finding parameters
         '''
         if self.model.blobFinder is not None:
-            self.blbPop = blbPopupWindow(self.model.blobFinder, self)
-            self.blbPop.exec_()
+            self.popups['blobFind'].loadParams(self.model.blobFinder)
+            self.popups['blobFind'].show()
+            self.popups['blobFind'].activateWindow()
 
     def showHistWindow(self):   
         '''
@@ -561,8 +578,10 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         pops up a window to adjust histogram canvas display
         also resets the sample positions (globalBlbs)
         '''
-        self.histOpt = histPopupWindow(self.histCanvas, self)
-        self.histOpt.exec_()
+        if self.showHist:
+            self.popups['histOpts'].loadParams(self.histCanvas)
+            self.popups['histOpts'].show()
+            self.popups['histOpts'].activateWindow()
                 
     def histSelect(self, extras =  None):
         '''
@@ -761,8 +780,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         '''
         popup a window to edit the intermeidate map of the mapper instance
         '''
-        self.gridPop = gridPopupWindow(self.model)
-        self.gridPop.exec_()     
+        self.popups['grid'].loadParams(self.model)
+        self.popups['grid'].show()
+        self.popups['grid'].activateWindow()
         
     def initializeInstrument(self, extras = None):
         '''
@@ -813,64 +833,29 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.model.setBlobSubset(blbSubset)
         self.slideCanvas.draw()
         
+    def createMessageBox(self, message, title):
+        msg = QtGui.QMessageBox(self)
+        msg.setWindowIcon(self.windowIcon())
+        msg.setText(message)
+        msg.setWindowTitle(title)
+        msg.setStandardButtons(QtGui.QMessageBox.Ok)
+        msg.setModal(False)
+        return msg
     
     '''
     These are popup messages with the hotkeys defined in the included canvases
     '''
     def imgHotkeyMsg(self):
-        msg = ("w,s,a,d\t\tMove\n"
-        "W,S,A,D\tMove Farther\n"
-        "q,e\t\tZoom out/in\n"
-        "r\t\tReset view\n"
-        "t\t\tSwitch views\n"
-        "b\t\tTest cell find\n"
-        "B\t\tSwitch to threshold view\n"
-        "m\t\tMirror x axis\n"
-        "p\t\tToggle predicted location\n"
-        "o\t\tToggle drawn shapes\n"
-        "O\t\tToggle drawing all cell lists\n"
-        "C\t\tClear found cells\n"
-        "c\t\tClear ROI\n\n"
-        "#\t\tToggle channel\n"
-        "Ctrl+#\t\tSet channel\n"
-        "Alt+#\t\tSet manual cell list\n\n"
-        "LMB\t\tMove to center\n"
-        "LMB+Shift\tAdd/remove points\n"
-        "LMB+Ctrl\tDraw ROI\n"
-        "MMB\t\tGet pixel values\n"
-        "RMB\t\tAdd slide coordinate\n"
-        "RMB+Shift\tRemove slide coordinate\n"
-        "Scroll\t\tZoom in/out")
-        QtGui.QMessageBox.about(self,
-                                "Hotkeys",
-                                msg)
-        
+        self.popups['imageHelp'].show()
+        self.popups['imageHelp'].activateWindow()
+
     def instHotkeyMsg(self):
-        msg = ("i,k,j,l\t\tMove\n"
-        "I,K,J,L\t\tMove Farther\n"
-        "+,-\t\tMove probe up/down\n"
-        "V\t\tSet probe position\n"
-        "v\t\tToggle probe position\n"
-        "h\t\tHome stage\n"
-        "x\t\tSingle analysis\n\n"
-        "LMB+Alt\tMove to spot\n"
-        "RMB\t\tAdd coordinate\n"
-        "RMB+Shift\tRemove coordinate\n"
-        )
-        QtGui.QMessageBox.about(self,
-                                "Hotkeys",
-                                msg)
+        self.popups['instHelp'].show()
+        self.popups['instHelp'].activateWindow()
         
     def histHotkeyMsg(self):
-        msg = ("LMB\t\tSet lower threshold\n"
-        "LMB+Shift\tSet lower cutoff\n"
-        "MMB\t\tSet single bar\n"
-        "RMB\t\tSet upper threshold\n"
-        "RMB+Shift\tSet upper cutoff\n"
-        "Scroll\t\tZoom in/out")
-        QtGui.QMessageBox.about(self,
-                                "Hotkeys",
-                                msg)
+        self.popups['histHelp'].show()
+        self.popups['histHelp'].activateWindow()
                 
     def keyPressEvent(self, event):
         '''
