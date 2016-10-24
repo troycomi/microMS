@@ -267,7 +267,7 @@ class SlideCanvas(MplCanvas):
         '''
         if self.tempIm is not None:
             self.axes.imshow(self.tempIm)
-            roi = self.model.getROIPathces(self.model.slide.getGlobalPoint(pnt))
+            roi = self.model.getROIPatches(self.model.slide.getGlobalPoint(pnt))
             self.axes.add_collection(PatchCollection(roi, match_original=(len(roi) != 0)))
             if self.model.mirrorImage:
                 self.axes.invert_xaxis()

@@ -8,6 +8,7 @@ import numpy as np
 from PyQt4 import QtGui, QtCore
 from ImageUtilities.blobFinder import blobFinder
 from ImageUtilities.blobUtilities import blobUtilities
+from ImageUtilities.blobList import blobList
 
 class HistCanvas(MplCanvas):
     '''
@@ -388,8 +389,12 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.LOW_BAR)
                 #add the low threshold blobs to the blob subset to pass to slideCanvas
                 if np.any(tempbool2):
-                    lowblbs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
-                    blbSubset.append((lowblbs, GUIConstants.LOW_BAR, 'low', int(self.lowIntens)))
+                    blbSubset.append(blobList())
+                    blbSubset[-1].blobs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
+                    blbSubset[-1].color = GUIConstants.LOW_BAR
+                    blbSubset[-1].description = 'low'
+                    blbSubset[-1].threshCutoff = int(self.lowIntens)
+                    #TODO add in blobfinder
                 
             #handle high intens
             if self.highIntens is not None:
@@ -404,8 +409,11 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.HIGH_BAR)
                 #add the high threshold blobs to the blob subset to pass to slideCanvas
                 if np.any(tempbool2):
-                    highblbs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
-                    blbSubset.append((highblbs, GUIConstants.HIGH_BAR, 'high', int(self.highIntens)))
+                    blbSubset.append(blobList())
+                    blbSubset[-1].blobs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
+                    blbSubset[-1].color = GUIConstants.HIGH_BAR
+                    blbSubset[-1].description = 'high'
+                    blbSubset[-1].threshCutoff = int(self.highIntens)
 
             #handle single bar selected
             if self.singleBar is not None:
@@ -417,9 +425,12 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.SINGLE_BAR)
                 #add the single bar blobs to the subset for slideCanvas
                 if np.any((self.populationValues < self.bins[ind]) & (self.populationValues >= self.bins[ind-1])):
-                    singleBlbs = [self.blobSet[i] for i in np.where((self.populationValues < self.bins[ind]) 
+                    blbSubset.append(blobList())
+                    blbSubset[-1].blobs = [self.blobSet[i] for i in np.where((self.populationValues < self.bins[ind]) 
                                                                        & (self.populationValues >= self.bins[ind-1]))[0]]
-                    blbSubset.append((singleBlbs, GUIConstants.SINGLE_BAR, 'single', int(self.bins[ind])))
+                    blbSubset[-1].color = GUIConstants.SINGLE_BAR
+                    blbSubset[-1].description = 'single'
+                    blbSubset[-1].threshCutoff = int(self.bins[ind])
 
             #draw lines displaying the values used for filtering
             #a single blob to highlight
