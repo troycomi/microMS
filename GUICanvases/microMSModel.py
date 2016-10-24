@@ -517,29 +517,7 @@ class MicroMSModel(object):
                     )
 
         #draw region of interest
-        if len(self.ROI) > 1:
-            if len(self.ROI) == 2:
-                p1 = self.slide.getLocalPoint(self.ROI[0])
-                p2 = self.slide.getLocalPoint(self.ROI[1])
-                
-                lowerL = ((min(p1[0], p2[0]), 
-                                min(p1[1], p2[1])))
-                x = abs(p1[0]- p2[0])   
-                y = abs(p1[1]- p2[1])                               
-                ptches.append(plt.Rectangle(lowerL, x, y, 
-                                             color=GUIConstants.ROI, 
-                                             fill=False))
-            else:
-                verts = []
-                codes = [Path.LINETO] * len(self.ROI)
-                for roi in self.ROI:
-                    verts.append(self.slide.getLocalPoint(roi))
-                verts.append(self.slide.getLocalPoint(self.ROI[0]))
-                codes[0] = Path.MOVETO
-                codes.append(Path.CLOSEPOLY)
-                ptches.append(mpl.patches.PathPatch(Path(verts, codes),
-                                                    color = GUIConstants.ROI,
-                                                    fill = False))
+        ptches.extend(self.getROIPathces())
 
         #draw histogram labels
         if self.histogramBlobs is not None and len(self.histogramBlobs) != 0:
@@ -608,6 +586,39 @@ class MicroMSModel(object):
 
         #return list of patches as a patch collection, if none match_original must be false
         return PatchCollection(ptches, match_original=(len(ptches) != 0))
+
+    def getROIPathces(self, newPoint = None):
+        ptches = []
+        tROI = self.ROI.copy()
+
+        if newPoint is not None:
+            tROI.append(newPoint)
+
+        if len(tROI) > 1:
+            if len(tROI) == 2:
+                p1 = self.slide.getLocalPoint(tROI[0])
+                p2 = self.slide.getLocalPoint(tROI[1])
+                
+                lowerL = ((min(p1[0], p2[0]), 
+                                min(p1[1], p2[1])))
+                x = abs(p1[0]- p2[0])   
+                y = abs(p1[1]- p2[1])                               
+                ptches.append(plt.Rectangle(lowerL, x, y, 
+                                             color=GUIConstants.ROI, 
+                                             fill=False))
+            else:
+                verts = []
+                codes = [Path.LINETO] * len(tROI)
+                for roi in tROI:
+                    verts.append(self.slide.getLocalPoint(roi))
+                verts.append(self.slide.getLocalPoint(tROI[0]))
+                codes[0] = Path.MOVETO
+                codes.append(Path.CLOSEPOLY)
+                ptches.append(mpl.patches.PathPatch(Path(verts, codes),
+                                                    color = GUIConstants.ROI,
+                                                    fill = False))
+
+        return ptches
         
 
     def drawLabels(self, axes):
