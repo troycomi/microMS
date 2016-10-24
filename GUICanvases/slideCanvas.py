@@ -139,7 +139,7 @@ class SlideCanvas(MplCanvas):
             #control + alt + LMB to add ROI point
             elif modifiers & QtCore.Qt.AltModifier and \
                 modifiers & QtCore.Qt.ControlModifier:
-                self.model.ROI.append(self.model.slide.getGlobalPoint(
+                self.model.reportROI(self.model.slide.getGlobalPoint(
                                     (event.xdata, event.ydata)))
 
             #alt + LMB to move connected instrument to specified position

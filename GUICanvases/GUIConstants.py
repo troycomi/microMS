@@ -14,6 +14,8 @@ FIDUCIAL                =   'blue'
 FIDUCIAL_LABEL_BKGRD    =   'white'
 #ROI boundary 
 ROI                     =   'yellow'
+#ROI minimum distance 
+ROI_DIST                =   10 #pixels
 #colors of blob list
 MULTI_BLOB              =   ['lime', 'salmon', 'skyBlue', 'orangeRed', 
                              'plum', 'hotPink', 'aqua', 'yellow', 'olive']

@@ -6,6 +6,8 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import os
 import random
+from scipy.spatial.distance import pdist
+import numpy as np
 
 from GUICanvases import GUIConstants
 
@@ -589,10 +591,7 @@ class MicroMSModel(object):
 
     def getROIPathces(self, newPoint = None):
         ptches = []
-        tROI = self.ROI.copy()
-
-        if newPoint is not None:
-            tROI.append(newPoint)
+        tROI = self.getROI(newPoint)
 
         if len(tROI) > 1:
             if len(tROI) == 2:
@@ -619,7 +618,42 @@ class MicroMSModel(object):
                                                     fill = False))
 
         return ptches
+
+    def reportROI(self, point):
+        '''
+        Handles ROI additions and removals based on position
+        point: the point in global coordinates
+        '''
+        self.ROI = self.getROI(point)
         
+    def getROI(self, point):
+        '''
+        Performs checks and additions to interacting with an ROI. Does not alter ROI
+        point: global point to check
+        returns a new list of tuples of the ROI
+        '''
+        result = self.ROI.copy()
+        if point is not None and len(self.ROI) > 1:
+            #find distances between point and ROI
+            dists = pdist([point] + result)[:len(result)]
+            #remove first point with dist <= ROI_DIST
+            for i,d in enumerate(dists):
+                if d < GUIConstants.ROI_DIST *2**self.slide.lvl:
+                    result.pop(i)
+                    return result
+
+            #add between the two closest dists
+            dists = np.append(dists, dists[0])
+            dist2 = []
+            for i in range(len(dists) -1):
+                dist2.append(dists[i] + dists[i+1])
+
+            result.insert(np.argmin(dist2)+1, point)
+
+        elif point is not None:
+            result.append(point)
+            
+        return result
 
     def drawLabels(self, axes):
         '''
