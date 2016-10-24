@@ -3,6 +3,7 @@ import scipy
 from scipy.spatial.distance import pdist
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+from copy import deepcopy
 
 from GUICanvases import GUIConstants
 
@@ -43,8 +44,19 @@ class blobList(object):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            setattr(result, k, deepcopy(v, memo))
+        #for k, v in self.__dict__.items():
+        #    setattr(result, k, deepcopy(v, memo))
+        result.blobs = deepcopy(self.blobs)
+        result.filters = deepcopy(self.filters)
+        result.description = deepcopy(self.description)
+        result.ROI = deepcopy(self.ROI)
+        result.threshCutoff = self.threshCutoff
+        result.color = self.color
+
+        result.blobFinder = blobFinder.blobFinder(self.blobFinder.slide)
+        for k,v in self.blobFinder.getParameters().items():
+            result.blobFinder.setParameterFromSplitString([k, str(v)])
+
         return result
 
     def saveBlobs(self, filename):
@@ -90,6 +102,7 @@ class blobList(object):
                 self.blobs.append(blob.blob.blobFromSplitString(toks))    
 
     def blobSlide(self):
+        ##TODO change roi in blobSlide to use blob filtering
         if len(self.ROI) == 0:
             self.blobs = self.blobFinder.blobSlide()
             return "Finished blob finding on whole slide"
@@ -151,7 +164,12 @@ class blobList(object):
             
         return result
 
-        
+    def roiFilter(self):
+        if len(self.ROI) < 3:
+            return
+        roi = Path(self.ROI)
+        points = np.array([ (b.X,b.Y) for b in self.blobs])
+        self.blobs = [self.blobs[i] for i in np.argwhere(roi.contains_points(points))]
 
     def distanceFilter(self, dist, subblocks = None, verbose = False):
         '''

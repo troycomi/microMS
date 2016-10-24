@@ -74,6 +74,8 @@ class SlideCanvas(MplCanvas):
         '''
         redraw canvas with markups using current settings
         '''
+        if self.mMoveROI == True:
+            return#redrawROI handles redraws here
         if self.model.slide is not None:
             #reset size as needed
             self.model.reportSize((float(self.size().width()), float(self.size().height())))
@@ -230,8 +232,8 @@ class SlideCanvas(MplCanvas):
             self.mMoveROI = True
 
         elif self.mMoveROI == True:
-            self.draw()
             self.mMoveROI = False
+            self.draw()
 
 
         #target drawing

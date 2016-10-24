@@ -397,10 +397,8 @@ class SlideWrapper(object):
         #create a mpl path to test inbounds
         roi = Path([(xlow, ylow), (xlow, yhigh), (xhigh, yhigh), (xhigh, ylow)])
         
-        points = np.array([ (b.X,b.Y) for b in blobs])#list(map(lambda b: (b.X, b.Y), blobs)))
-        contains = roi.contains_points(points)
-        where = np.argwhere(contains)
-        result = [blobs[i] for i in where]
+        points = np.array([ (b.X,b.Y) for b in blobs])
+        result = [blobs[i] for i in np.argwhere(roi.contains_points(points))]
         return list(map(lambda b: blob.blob((b.X-xlow)/2**self.lvl, (b.Y-ylow)/2**self.lvl, b.radius/2**self.lvl, b.circularity, b.group), result))
 
     def getSize(self):

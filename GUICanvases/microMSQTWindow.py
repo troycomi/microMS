@@ -154,6 +154,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         #cell position options
         self.tools_menu.addSeparator()
         self.tools_menu.addAction('Distance Filter',self.distanceFilter)
+        self.tools_menu.addAction('ROI Filter',self.roiFilter)
+        self.tools_menu.addSeparator()
         self.tools_menu.addAction('Rectangular Pack', self.rectPack)
         self.tools_menu.addAction('Hexagonal Pack', self.hexPack)
         self.tools_menu.addAction('Circular Pack', self.circPack)
@@ -680,6 +682,17 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.slideCanvas.draw()
             self.raise_()
             self.activateWindow()
+
+    def roiFilter(self):
+        '''
+        Performs filtering of cells falling within the ROI
+        '''
+        self.statusBar().showMessage(
+            self.model.roiFilter()
+            )
+        if self.showHist:
+            self.histCanvas.calculateHist()
+        self.slideCanvas.draw()
 
     def rectPack(self, extras = None):
         '''

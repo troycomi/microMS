@@ -315,6 +315,18 @@ class MicroMSModel(object):
 
         return "Finished distance filter"
 
+    def roiFilter(self):
+        if self.currentBlobLength() == 0:
+            return "No blobs to filter"
+        if len(self.blobCollection[self.currentBlobs].ROI) < 2:
+            return "No ROI selected"
+        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
+        startLen = self.currentBlobLength()
+        self.blobCollection[self.currentBlobs].roiFilter()
+        endLen = self.currentBlobLength()
+        return "{} cells removed, {} remain".format(startLen - endLen, endLen)
+
+
     def hexPackBlobs(self, separation, layers, dynamicLayering = False):
         '''
         expands each blob into hexagonally closest packed positions
