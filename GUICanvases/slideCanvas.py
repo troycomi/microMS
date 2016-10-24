@@ -9,6 +9,7 @@ import random
 import os
 
 import matplotlib.pyplot as plt
+from matplotlib.collections import PatchCollection
 from PIL import ImageDraw, ImageFont, Image
 
 from GUICanvases.mplCanvas import MplCanvas
@@ -49,6 +50,7 @@ class SlideCanvas(MplCanvas):
         self.endP = None            #end position of a mouse drag
         self.mDownCirc = False      #mouse down for drawing a global blob
         self.mMoveCirc = False      #mouse moved while drawing a global blob
+        self.mMoveROI = False       #mouse moved while drawing ROI with control alt
 
         self.model = model
         self.master = master
@@ -137,7 +139,7 @@ class SlideCanvas(MplCanvas):
             #control + alt + LMB to add ROI point
             elif modifiers & QtCore.Qt.AltModifier and \
                 modifiers & QtCore.Qt.ControlModifier:
-                self.model.ROI.append(self.model.slide.getGlobalPoint(
+                self.model.reportROI(self.model.slide.getGlobalPoint(
                                     (event.xdata, event.ydata)))
 
             #alt + LMB to move connected instrument to specified position
@@ -218,13 +220,24 @@ class SlideCanvas(MplCanvas):
             return
 
         #ROI movement
+        modifiers = QtGui.QApplication.keyboardModifiers()
         if self.mDown == True:
-                self.redrawRect((event.xdata, event.ydata))
+            self.redrawRect((event.xdata, event.ydata))
+
+        elif modifiers & QtCore.Qt.AltModifier and \
+                modifiers & QtCore.Qt.ControlModifier:
+            self.redrawROI((event.xdata, event.ydata))
+            self.mMoveROI = True
+
+        elif self.mMoveROI == True:
+            self.draw()
+            self.mMoveROI = False
+
 
         #target drawing
-        if self.mDownCirc == True:
-                self.redrawCirc((event.xdata, event.ydata))
-                self.mMoveCirc = True
+        elif self.mDownCirc == True:
+            self.redrawCirc((event.xdata, event.ydata))
+            self.mMoveCirc = True
 
     def mouseZoom(self,event):
         '''
@@ -246,6 +259,19 @@ class SlideCanvas(MplCanvas):
 
         #reset temporary blobs and update
         self.draw()
+
+    def redrawROI(self, pnt):
+        '''
+        helper method to draw ROI polygon during mouse movement
+        pnt: the current point in local (image) coordinates
+        '''
+        if self.tempIm is not None:
+            self.axes.imshow(self.tempIm)
+            roi = self.model.getROIPathces(self.model.slide.getGlobalPoint(pnt))
+            self.axes.add_collection(PatchCollection(roi, match_original=(len(roi) != 0)))
+            if self.model.mirrorImage:
+                self.axes.invert_xaxis()
+            super().draw() 
 
     def redrawRect(self, pnt):
         '''

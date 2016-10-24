@@ -6,6 +6,8 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import os
 import random
+from scipy.spatial.distance import pdist
+import numpy as np
 
 from GUICanvases import GUIConstants
 
@@ -517,29 +519,7 @@ class MicroMSModel(object):
                     )
 
         #draw region of interest
-        if len(self.ROI) > 1:
-            if len(self.ROI) == 2:
-                p1 = self.slide.getLocalPoint(self.ROI[0])
-                p2 = self.slide.getLocalPoint(self.ROI[1])
-                
-                lowerL = ((min(p1[0], p2[0]), 
-                                min(p1[1], p2[1])))
-                x = abs(p1[0]- p2[0])   
-                y = abs(p1[1]- p2[1])                               
-                ptches.append(plt.Rectangle(lowerL, x, y, 
-                                             color=GUIConstants.ROI, 
-                                             fill=False))
-            else:
-                verts = []
-                codes = [Path.LINETO] * len(self.ROI)
-                for roi in self.ROI:
-                    verts.append(self.slide.getLocalPoint(roi))
-                verts.append(self.slide.getLocalPoint(self.ROI[0]))
-                codes[0] = Path.MOVETO
-                codes.append(Path.CLOSEPOLY)
-                ptches.append(mpl.patches.PathPatch(Path(verts, codes),
-                                                    color = GUIConstants.ROI,
-                                                    fill = False))
+        ptches.extend(self.getROIPathces())
 
         #draw histogram labels
         if self.histogramBlobs is not None and len(self.histogramBlobs) != 0:
@@ -608,7 +588,106 @@ class MicroMSModel(object):
 
         #return list of patches as a patch collection, if none match_original must be false
         return PatchCollection(ptches, match_original=(len(ptches) != 0))
+
+    def getROIPathces(self, newPoint = None):
+        ptches = []
+        tROI = self.getROI(newPoint)
+
+        if len(tROI) > 1:
+            if len(tROI) == 2:
+                p1 = self.slide.getLocalPoint(tROI[0])
+                p2 = self.slide.getLocalPoint(tROI[1])
+                
+                lowerL = ((min(p1[0], p2[0]), 
+                                min(p1[1], p2[1])))
+                x = abs(p1[0]- p2[0])   
+                y = abs(p1[1]- p2[1])                               
+                ptches.append(plt.Rectangle(lowerL, x, y, 
+                                             color=GUIConstants.ROI, 
+                                             fill=False))
+            else:
+                verts = []
+                codes = [Path.LINETO] * len(tROI)
+                for roi in tROI:
+                    verts.append(self.slide.getLocalPoint(roi))
+                verts.append(self.slide.getLocalPoint(tROI[0]))
+                codes[0] = Path.MOVETO
+                codes.append(Path.CLOSEPOLY)
+                ptches.append(mpl.patches.PathPatch(Path(verts, None),
+                                                    color = GUIConstants.ROI,
+                                                    fill = False))
+
+        return ptches
+
+    def reportROI(self, point):
+        '''
+        Handles ROI additions and removals based on position
+        point: the point in global coordinates
+        '''
+        self.ROI = self.getROI(point)
         
+    def getROI(self, point):
+        '''
+        Performs checks and additions to interacting with an ROI. Does not alter ROI
+        point: global point to check
+        returns a new list of tuples of the ROI
+        '''
+        result = self.ROI.copy()
+        if point is not None and len(self.ROI) > 2:
+            #find distances between point and ROI
+            dists = pdist([point] + result)[:len(result)]
+            #remove first point with dist <= ROI_DIST
+            for i,d in enumerate(dists):
+                if d < GUIConstants.ROI_DIST *2**self.slide.lvl:
+                    result.pop(i)
+                    return result
+
+            #add between the two closest dists
+            dists = np.append(dists, dists[0])
+            dist2 = []
+            for i in range(len(dists) -1):
+                dist2.append(dists[i] + dists[i+1])
+            #quick, no check for intersection
+            #result.insert(np.argmin(dist2)+1, point)
+
+            #slower, checks for overlapping, returns the shortest distance without overlap
+            pos = np.argsort(dist2)
+            for p in pos:
+                #check first leg of path
+                segment = Path([result[p], point])
+                testSeg = Path(result[p+1:] + result[:p], [Path.MOVETO] + [Path.LINETO]*(len(result)-2))
+                if testSeg.intersects_path(segment):
+                    continue
+
+                #check second leg of path
+                if p+1 == len(result):
+                    segment = Path([point, result[0]])
+                    testSeg = Path(result[1:], [Path.MOVETO] + [Path.LINETO]*(len(result)-2))
+                    if testSeg.intersects_path(segment):
+                        continue
+                else:
+                    segment = Path([point, result[p+1]])
+                    testSeg = Path(result[p+2:] + result[:p+1], [Path.MOVETO] + [Path.LINETO]*(len(result)-2))
+                    if testSeg.intersects_path(segment):
+                        continue
+
+                #passed, return:
+                result.insert(p+1, point)
+                return result
+
+                ##build new path
+                #if p < len(result) -1:
+                #    newPath = Path([result[p], point, result[p+1]], [Path.MOVETO] + [Path.LINETO] *2)
+                #else:
+                #    newPath = Path([result[p], point, result[0]], [Path.MOVETO] + [Path.LINETO] *2)
+                #if not newPath.intersects_path(Path(result + [result[0]], [Path.MOVETO] + [Path.LINETO] * len(result)), filled=False):
+                #    result.insert(p+1, point)
+                #    return result
+
+        elif point is not None:
+            result.append(point)
+            
+        return result
 
     def drawLabels(self, axes):
         '''
