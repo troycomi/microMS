@@ -26,6 +26,8 @@ class blobList(object):
         self.description = None
         self.threshCutoff = None
         self.ROI = []
+        self.groupLabels = dict()
+        ##Add any new instance vars to deepcopy!
 
     def append(self, blob):
         if isinstance(blob, 'blob'):
@@ -52,10 +54,10 @@ class blobList(object):
         result.ROI = deepcopy(self.ROI)
         result.threshCutoff = self.threshCutoff
         result.color = self.color
+        result.groupLabels = deepcopy(self.groupLabels)
 
         result.blobFinder = blobFinder.blobFinder(self.blobFinder.slide)
-        for k,v in self.blobFinder.getParameters().items():
-            result.blobFinder.setParameterFromSplitString([k, str(v)])
+        result.blobFinder.copyParameters(self.blobFinder)
 
         return result
 
@@ -100,6 +102,26 @@ class blobList(object):
             elif toks[0] != 'x':
                 #add new blob
                 self.blobs.append(blob.blob.blobFromSplitString(toks))    
+
+        self.generateGroupLabels()
+
+    def blobRequest(self, globalPoint, radius):
+        '''
+        Tries to add the blob to the current blob list.  
+        If overlap with current blob, remove that point
+        globalPoint: (x,y) tuple in the image coordinate space
+        radius: the radius of the new blob to be added
+        returns true if a blob was added, false if one was removed
+        '''
+        for i,b in enumerate(self.blobs):
+            if (globalPoint[0]-b.X)**2 + (globalPoint[1]-b.Y)**2 <= \
+                b.radius**2:
+                self.blobs.pop(i)
+                return False
+
+        self.blobs.append(blob.blob(globalPoint[0], globalPoint[1], radius))
+        return True
+
 
     def blobSlide(self):
         ##TODO change roi in blobSlide to use blob filtering
@@ -417,6 +439,7 @@ class blobList(object):
             ind += 1
                         
         self.blobs = result
+        self.generateGroupLabels()
     
     def rectangularlyPackPoints(self, spacing, numLayers, 
                                    r = GUIConstants.DEFAULT_PATTERN_RADIUS, c = 1,
@@ -483,6 +506,7 @@ class blobList(object):
             ind += 1
 
         self.blobs = result
+        self.generateGroupLabels()
     
     def hexagonallyClosePackPoints(self, spacing, numLayers, 
                                    r = GUIConstants.DEFAULT_PATTERN_RADIUS, c = 1,
@@ -546,6 +570,25 @@ class blobList(object):
             ind += 1
         
         self.blobs = result
+        self.generateGroupLabels()
+
+    def generateGroupLabels(self):
+        '''
+        Populates groupLabels, a dict of NAME -> (x,y) for each group member.
+        (x,y) is the top right corner (max X, min Y) in global coordinates
+        '''
+
+        self.groupLabels = dict()
+        for b in self.blobs:
+            if b.group is not None:
+                #add in current blob
+                if b.group not in self.groupLabels:
+                    self.groupLabels[b.group] = (b.X, b.Y)
+                else:
+                    #update tuple
+                    p = self.groupLabels[b.group]
+                    self.groupLabels[b.group] = (max(b.X, p[0]), min(b.Y, p[1]))
+
 
     def getPatches(self, limitDraw, slideWrapper):
 

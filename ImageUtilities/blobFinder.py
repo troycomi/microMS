@@ -37,6 +37,20 @@ class blobFinder(object):
         self.threshold = threshold
         self.imageIndex = imageIndex
 
+    def copyParameters(self, other):
+        '''
+        Copies cell finding parameters from another cellFinder instance
+        other: blobFinder object to copy parameters from
+        '''
+        self.minSize = other.minSize
+        self.maxSize = other.maxCircularity
+        self.minCircularity = other.minCircularity
+        self.maxCircularity = other.maxCircularity
+        self.colorChannel = other.colorChannel
+        self.threshold = other.threshold
+        self.imageIndex = other.imageIndex
+
+
     def getParameters(self):
         '''
         get the set of parameters as a dictionary

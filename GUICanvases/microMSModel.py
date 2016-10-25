@@ -541,7 +541,7 @@ class MicroMSModel(object):
                 ptches.append(plt.Rectangle(lowerL, x, y, 
                                              color=GUIConstants.ROI, 
                                              fill=False))
-            else:
+            else:                
                 verts = []
                 for roi in tROI:
                     verts.append(self.slide.getLocalPoint(roi))
@@ -593,38 +593,35 @@ class MicroMSModel(object):
             pass
         #normal blobs can have group labels
         else:
-            #TODO: FINISH THIS
             pass
             #show group names of all lists
-            #if self.drawAllBlobs == True:
-            #    for j, blobs in enumerate(self.blobCollection):
-            #        #first blob in list must have a group
-            #        #may be a good idea to do this check in the new list object differently
-            #        if len(blobs) != 0 and blobs[0].group is not None:
-            #            points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-            #            drawnlbls = set()          
-            #            for i,p in enumerate(points):
-            #                if blobs[inds[i]].group not in drawnlbls:
-            #                    axes.text(p[0]+GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-            #                                    p[1]-GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-            #                                    blobs[inds[i]].group,
-            #                                    fontsize=lineWid+6, 
-            #                                    color=GUIConstants.EXPANDED_TEXT)
-            #                    drawnlbls.add(blobs[inds[i]].group)
-            ##show only the current list
-            #else:
-            #    blobs = self.blobCollection[self.currentBlobs]
-            #    if blobs.length() != 0 and blobs[0].group is not None:
-            #        points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-            #        drawnlbls = set()          
-            #        for i,p in enumerate(points):
-            #            if blobs[inds[i]].group not in drawnlbls:
-            #                axes.text(p[0]+GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-            #                                p[1]-GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-            #                                blobs[inds[i]].group,
-            #                                fontsize=lineWid+6, 
-            #                                color=GUIConstants.EXPANDED_TEXT)
-            #                drawnlbls.add(blobs[inds[i]].group)
+            if self.drawAllBlobs == True:
+                for blobs in self.blobCollection:
+                    self._drawBlobLabels(axes, blobs, lineWid)
+
+            #show only the current list
+            else:
+                self._drawBlobLabels(axes, self.blobCollection[self.currentBlobs], lineWid)
+
+    def _drawBlobLabels(self, axes, blobs, lineWid):
+        '''
+        Helper method to draw blob labels onto the provided axis
+        axes: matplotlib axes to draw text to
+        blobs: blobList with labels to draw
+        lineWid: the linewidth to use for drawing 
+        '''
+        #get grouplabels from blobs
+        labels = list(blobs.groupLabels.keys())
+        pos = list(blobs.groupLabels.values())
+        if len(labels) != 0:
+            points, inds = self.slide.getPointsInBounds(pos)
+            for i,p in enumerate(points):
+                #add offset from normal position
+                axes.text(p[0]+GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
+                                p[1]-GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
+                                labels[inds[i]],
+                                fontsize=lineWid+6, 
+                                color=GUIConstants.EXPANDED_TEXT)
 
     def reportInfoRequest(self, localPoint):
         '''
@@ -725,32 +722,12 @@ class MicroMSModel(object):
         #no slide to add blobs onto
         if self.slide is None:
             return "No slide loaded"
-
-        curBlbs = self.blobCollection[self.currentBlobs]
+        
         globalPnt = self.slide.getGlobalPoint(localPoint)
-        #try to find mouse click position
-        if len(curBlbs) > 0:
-            points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(curBlbs))
-            foundPoint = False
-            for i,p in enumerate(points):
-                #see if click point is within radius
-                if not foundPoint and \
-                    (localPoint[0]-p[0])**2 + (localPoint[1] - p[1])**2 <= \
-                    (curBlbs[inds[i]].radius/2**self.slide.lvl)**2:
-                        #remove point
-                        foundPoint = True
-                        curBlbs.pop(inds[i])
-                        return "Removed blob at {}, {}".format(globalPnt[0], globalPnt[1])
-
-            #add new point
-            if not foundPoint:
-                curBlbs.append(blob.blob(x = globalPnt[0], y = globalPnt[1], radius = radius))
-                return "Adding blob at {}, {}".format(globalPnt[0], globalPnt[1])
-
-        #first point added
-        else:
-            curBlbs.append(blob.blob(x = globalPnt[0], y = globalPnt[1], radius = radius))
+        if self.blobCollection[self.currentBlobs].blobRequest(globalPnt, radius) == True:
             return "Adding blob at {}, {}".format(globalPnt[0], globalPnt[1])
+        else:
+            return "Removed blob at {}, {}".format(globalPnt[0], globalPnt[1])
 
     def requestInstrumentMove(self, localPoint):
         '''
