@@ -1,13 +1,14 @@
 from __future__ import unicode_literals
 
+import numpy as np
+from PyQt4 import QtGui, QtCore
+from copy import copy
 
 from GUICanvases.mplCanvas import MplCanvas
 from GUICanvases import GUIConstants
 
-import numpy as np
-from PyQt4 import QtGui, QtCore
 from ImageUtilities.blobFinder import blobFinder
-from ImageUtilities.blobUtilities import blobUtilities
+from ImageUtilities.blobList import blobList
 
 class HistCanvas(MplCanvas):
     '''
@@ -94,28 +95,28 @@ class HistCanvas(MplCanvas):
         self.blobSet = self.model.blobCollection[self.model.currentBlobs]
 
         #return immediately if globalBlbs is not set
-        if self.blobSet is None or len(self.blobSet) == 0:
+        if self.blobSet is None or len(self.blobSet.blobs) == 0:
             self.populationValues = None
             return
 
         #metric == 3 -> look at the area (= pi * r^2)
         if self.populationMetric == 3:
-            self.populationValues = np.array([x.radius*x.radius*3.14 for x in self.blobSet])
+            self.populationValues = np.array([x.radius*x.radius*3.14 for x in self.blobSet.blobs])
             self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
 
         #metric == 4 -> look at circularity
         elif self.populationMetric == 4:
-            self.populationValues = np.array([x.circularity for x in self.blobSet])
+            self.populationValues = np.array([x.circularity for x in self.blobSet.blobs])
             self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
 
         #metric == 5 -> look at minimum distance between samples
         elif self.populationMetric == 5:
-            self.populationValues = np.array(blobUtilities.minimumDistances(self.blobSet))
+            self.populationValues = np.array(self.blobSet.minimumDistances())
             self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
 
         #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
         else:
-            self.populationValues = np.array(self.model.slide.getFluorInt(self.blobSet, self.populationMetric, self.imgInd, self.offset, self.reduceMax))
+            self.populationValues = np.array(self.model.slide.getFluorInt(self.blobSet.blobs, self.populationMetric, self.imgInd, self.offset, self.reduceMax))
             self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins=100, range=(0,255),facecolor = GUIConstants.BAR_COLORS[self.populationMetric])
 
         self.bins = self.bins[1:]
@@ -287,7 +288,7 @@ class HistCanvas(MplCanvas):
                 tempbool = (self.populationValues < self.lowIntens) & (self.populationValues > self.lowLimit)
             else:
                 tempbool = self.populationValues < self.lowIntens
-            lowblbs = [self.blobSet[i] for i in np.where(tempbool)[0]]
+            lowblbs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
                 
         #high intensity
         if self.highIntens is not None:
@@ -296,7 +297,7 @@ class HistCanvas(MplCanvas):
             else:
                 tempbool = self.populationValues >  self.highIntens
                 
-            highblbs = [self.blobSet[i] for i in np.where(tempbool)[0]]
+            highblbs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
 
         #return None if both blobs are present
         if len(lowblbs) > 0 and len(highblbs) > 0:
@@ -304,9 +305,13 @@ class HistCanvas(MplCanvas):
 
         #return one or the other
         if len(lowblbs) > 0:
-            return lowblbs
+            result = copy(self.blobSet)
+            result.blobs = lowblbs
+            return result
         if len(highblbs) > 0:
-            return highblbs
+            result = copy(self.blobSet)
+            result.blobs = highblbs
+            return result
 
         #no cells in filter
         return None
@@ -388,8 +393,11 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.LOW_BAR)
                 #add the low threshold blobs to the blob subset to pass to slideCanvas
                 if np.any(tempbool2):
-                    lowblbs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
-                    blbSubset.append((lowblbs, GUIConstants.LOW_BAR, 'low', int(self.lowIntens)))
+                    blbSubset.append(copy(self.blobSet))
+                    blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool2)[0]]
+                    blbSubset[-1].color = GUIConstants.LOW_BAR
+                    blbSubset[-1].description = 'low'
+                    blbSubset[-1].threshCutoff = int(self.lowIntens)
                 
             #handle high intens
             if self.highIntens is not None:
@@ -404,8 +412,11 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.HIGH_BAR)
                 #add the high threshold blobs to the blob subset to pass to slideCanvas
                 if np.any(tempbool2):
-                    highblbs = [self.blobSet[i] for i in np.where(tempbool2)[0]]
-                    blbSubset.append((highblbs, GUIConstants.HIGH_BAR, 'high', int(self.highIntens)))
+                    blbSubset.append(copy(self.blobSet))
+                    blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool2)[0]]
+                    blbSubset[-1].color = GUIConstants.HIGH_BAR
+                    blbSubset[-1].description = 'high'
+                    blbSubset[-1].threshCutoff = int(self.highIntens)
 
             #handle single bar selected
             if self.singleBar is not None:
@@ -417,9 +428,12 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.SINGLE_BAR)
                 #add the single bar blobs to the subset for slideCanvas
                 if np.any((self.populationValues < self.bins[ind]) & (self.populationValues >= self.bins[ind-1])):
-                    singleBlbs = [self.blobSet[i] for i in np.where((self.populationValues < self.bins[ind]) 
+                    blbSubset.append(copy(self.blobSet))
+                    blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where((self.populationValues < self.bins[ind]) 
                                                                        & (self.populationValues >= self.bins[ind-1]))[0]]
-                    blbSubset.append((singleBlbs, GUIConstants.SINGLE_BAR, 'single', int(self.bins[ind])))
+                    blbSubset[-1].color = GUIConstants.SINGLE_BAR
+                    blbSubset[-1].description = 'single'
+                    blbSubset[-1].threshCutoff = int(self.bins[ind])
 
             #draw lines displaying the values used for filtering
             #a single blob to highlight

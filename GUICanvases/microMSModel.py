@@ -8,15 +8,16 @@ import os
 import random
 from scipy.spatial.distance import pdist
 import numpy as np
+from copy import deepcopy, copy
 
 from GUICanvases import GUIConstants
 
 from ImageUtilities import slideWrapper
 from ImageUtilities import blobFinder
-from ImageUtilities.blobUtilities import blobUtilities
 from ImageUtilities import blob
 from ImageUtilities import TSPutil
 from ImageUtilities.enumModule import Direction, StepSize
+from ImageUtilities import blobList
 
 from CoordinateMappers import supportedCoordSystems
 
@@ -27,14 +28,13 @@ class MicroMSModel(object):
     '''
     def __init__(self, GUI):
         '''
-        Initialize a new model setup.  Slide and blobFinder start as None.
+        Initialize a new model setup.  Slide starts as None.
         The coordinateMapper is set as the first mapper of the supported mappers.
         Also calls self.resetVariables to clear other instance variables.
         GUI: the supporting GUI
         '''
         self.slide = None
         self.coordinateMapper = supportedCoordSystems.supportedMappers[0]
-        self.blobFinder = None
         self.resetVariables()
         self.GUI = GUI
 
@@ -44,19 +44,20 @@ class MicroMSModel(object):
         filename: the image to load
         '''
         self.slide = slideWrapper.SlideWrapper(filename)
-        self.blobFinder = blobFinder.blobFinder(self.slide)
         self.resetVariables()
 
     def resetVariables(self):
         '''
         Clears and initializes all instance variables
         '''
-        self.blobCollection = [[] for i in range(9)]
+        self.blobCollection = [blobList.blobList(self.slide) for i in range(9)]
+        for i in range(len(self.blobCollection)):
+            self.blobCollection[i].color = GUIConstants.MULTI_BLOB[i]
+
         self.currentBlobs = 0
         self.tempBlobs = None
         self.histogramBlobs = None
         self.filters = []
-        self.ROI = []
         self.coordinateMapper.clearPoints()
         self.savedBlobs = None
         self.mirrorImage = False
@@ -96,12 +97,11 @@ class MicroMSModel(object):
         tfont = ImageFont.truetype("arial.ttf",linWid+6)
         #for each blob list
         for ii in range(len(self.blobCollection)):
-            if self.blobCollection[ii] is not None and \
-                    len(self.blobCollection[ii]) > 0:
+            if self.blobCollection[ii].length() > 0:
                     drawnlbls = set()
-                    drawlbl = self.blobCollection[ii][0].group is not None      
+                    drawlbl = self.blobCollection[ii].blobs[0].group is not None      
                     #for each blob      
-                    for i,gb in enumerate(self.blobCollection[ii]):
+                    for i,gb in enumerate(self.blobCollection[ii].blobs):
                         p = self.slide.getLocalPoint((gb.X,gb.Y))
                         rad = gb.radius/2**self.slide.lvl
                         #draw blob outline
@@ -125,16 +125,13 @@ class MicroMSModel(object):
         filename: file to save to
         '''
         #slide not set up
-        if self.blobFinder is None:
+        if self.slide is None:
             return "No slide loaded"
         #current list is empty
-        if len(self.blobCollection[self.currentBlobs]) == 0:
+        if self.blobCollection[self.currentBlobs].length() == 0:
             return "List {} contains no blobs!".format(self.currentBlobs +1) #plus one for GUI display
         #save blobs
-        blobUtilities.saveBlobs(filename,
-                                self.blobCollection[self.currentBlobs],
-                                self.blobFinder,
-                                self.filters)
+        self.blobCollection[self.currentBlobs].saveBlobs(filename)
         return "Saved blob information"
 
     def saveHistogramBlobs(self, filename):
@@ -143,7 +140,7 @@ class MicroMSModel(object):
         filename: the filename to save
         '''
         #slide not set up
-        if self.blobFinder is None:
+        if self.slide is None:
             return "No slide loaded"
         #no histogram blobs to save
         if self.histogramBlobs is None or len(self.histogramBlobs) == 0:
@@ -151,11 +148,8 @@ class MicroMSModel(object):
         #save different divisions
         f, ex = os.path.splitext(filename)
         for blbs in self.histogramBlobs:
-            if len(blbs[0]) > 0:
-                blobUtilities.saveBlobs('{}_{}_{}{}'.format(f, blbs[2], blbs[3], ex),
-                                        blbs[0],
-                                        self.blobFinder,
-                                        self.filters)
+            if blbs.length() > 0:
+                blbs.saveBlobs('{}_{}_{}{}'.format(f, blbs.description, blbs.threshCutoff, ex))
         return "Saved histogram divisions with base name {}".format(os.path.split(f)[1])
 
     def saveAllBlobs(self, filename):
@@ -165,23 +159,20 @@ class MicroMSModel(object):
             dir/test.txt -> dir/test_1.txt
         '''
         #slide not set up
-        if self.blobFinder is None:
+        if self.slide is None:
             return "No slide loaded"
         f, ex = os.path.splitext(filename)
         #save each blob list
         for i, blbs in enumerate(self.blobCollection):
-            if len(blbs) > 0:
-                blobUtilities.saveBlobs('{}_{}{}'.format(f, i, ex),
-                                        blbs,
-                                        self.blobFinder,
-                                        self.filters)
+            if blbs.length() > 0:
+                blbs.saveBlobs('{}_{}{}'.format(f, i, ex))
 
         return "Saved blobs with base name '{}'".format(os.path.split(f)[1])
 
     def saveCoordinateMapper(self, filename):
         '''
         Save the current coordinate mapper
-        filename: fil to save to
+        filename: file to save to
         '''
         #no fiducials trained
         if len(self.coordinateMapper.pixelPoints) < 1:
@@ -201,11 +192,11 @@ class MicroMSModel(object):
         if len(self.coordinateMapper.physPoints) < 2:
             return "Not enough training points to save instrument file"
 
-        if len(self.blobCollection[self.currentBlobs]) == 0:
+        if self.blobCollection[self.currentBlobs].length() == 0:
             return "No blobs to save"
 
         #get current blob list
-        blobs = self.blobCollection[self.currentBlobs]
+        blobs = self.blobCollection[self.currentBlobs].blobs
         #if maxPoints is valid
         if maxPoints is not None and maxPoints > 0 and maxPoints < self.currentBlobLength():
             #obtain a randome sample of blobs
@@ -263,8 +254,7 @@ class MicroMSModel(object):
         Loads the blobs in the provided filename to the current list of blobs and sets the blobfinder to the preivous values
         filename: file to load
         '''
-        self.blobCollection[self.currentBlobs], self.blobFinder = \
-            blobUtilities.loadBlobs(filename, self.blobFinder)
+        self.blobCollection[self.currentBlobs].loadBlobs(filename)
         return "Finished loading blob positions"
 
     def loadInstrumentPositions(self, filename):
@@ -273,7 +263,7 @@ class MicroMSModel(object):
         Will not have proper radius, but should retain the groups.
         filename: file to load
         '''
-        self.blobCollection[self.currentBlobs] = \
+        self.blobCollection[self.currentBlobs].blobs = \
             self.coordinateMapper.loadInstrumentFile(filename)
         return "Finished loading instrument file"
 
@@ -281,7 +271,7 @@ class MicroMSModel(object):
         '''
         Gets the length of the current blob list
         '''
-        return len(self.blobCollection[self.currentBlobs])
+        return self.blobCollection[self.currentBlobs].length()
 
     def currentInstrumentExtension(self):
         '''
@@ -295,19 +285,16 @@ class MicroMSModel(object):
         '''
         if self.slide is None:
             return "No slide was open"
-        if len(self.ROI) < 2:
-            self.blobCollection[self.currentBlobs] = self.blobFinder.blobSlide()
-            return "Finished blob finding on whole slide"
-        else:
-            self.blobCollection[self.currentBlobs] = self.blobFinder.blobSlide(ROI = self.ROI)
-            return "Finished blob finding in ROI"
+        return self.blobCollection[self.currentBlobs].blobSlide()
 
     def updateCurrentBlobs(self, newBlobs):
+        if not isinstance(newBlobs, blobList.blobList):
+            raise ValueError('New blobs must be a blobList')
         self.savedBlobs, self.blobCollection[self.currentBlobs] = \
             self.blobCollection[self.currentBlobs], newBlobs
         #find first unused blob index
         for i, blbs in enumerate(self.blobCollection):
-            if len(blbs) == 0:
+            if blbs.length() == 0:
                 self.blobCollection[i] = self.savedBlobs
                 return i
 
@@ -324,16 +311,22 @@ class MicroMSModel(object):
         '''
         if self.currentBlobLength() == 0:
             return "No blobs to filter"
-        tooClose = blobUtilities.distanceFilter(self.blobCollection[self.currentBlobs],distance,verbose = True)
-        self.savedBlobs = []
-        for i,tc in enumerate(tooClose):
-            if not tc:
-                self.savedBlobs.append(self.blobCollection[self.currentBlobs][i])
-                
-        self.savedBlobs, self.blobCollection[self.currentBlobs] = \
-            self.blobCollection[self.currentBlobs], self.savedBlobs
+        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
+        self.blobCollection[self.currentBlobs].distanceFilter(distance, verbose = True)
 
         return "Finished distance filter"
+
+    def roiFilter(self):
+        if self.currentBlobLength() == 0:
+            return "No blobs to filter"
+        if len(self.blobCollection[self.currentBlobs].ROI) < 3:
+            return "No ROI selected"
+        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
+        startLen = self.currentBlobLength()
+        self.blobCollection[self.currentBlobs].roiFilter()
+        endLen = self.currentBlobLength()
+        return "{} cells removed, {} remain".format(startLen - endLen, endLen)
+
 
     def hexPackBlobs(self, separation, layers, dynamicLayering = False):
         '''
@@ -343,10 +336,8 @@ class MicroMSModel(object):
         layers: number of layers to generate
         dynamicLayering: adjust the number of layers with the blob radius
         '''
-        self.savedBlobs = self.blobCollection[self.currentBlobs]
-        self.blobCollection[self.currentBlobs] = \
-            blobUtilities.hexagonallyClosePackPoints(self.blobCollection[self.currentBlobs],
-                                                     separation, layers, dynamicLayering = dynamicLayering)
+        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
+        self.blobCollection[self.currentBlobs].hexagonallyClosePackPoints(separation, layers, dynamicLayering = dynamicLayering)
 
     
     def rectPackBlobs(self, separation, layers, dynamicLayering = False):
@@ -357,10 +348,8 @@ class MicroMSModel(object):
         layers: number of layers to generate
         dynamicLayering: adjust the number of layers with the blob radius
         '''
-        self.savedBlobs = self.blobCollection[self.currentBlobs]
-        self.blobCollection[self.currentBlobs] = \
-            blobUtilities.rectangularlyPackPoints(self.blobCollection[self.currentBlobs],
-                                                     separation, layers, dynamicLayering = dynamicLayering)
+        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
+        self.blobCollection[self.currentBlobs].rectangularlyPackPoints(separation, layers, dynamicLayering = dynamicLayering)
         
     def circularPackBlobs(self, separation, maxShots, offset):
         '''
@@ -371,10 +360,8 @@ class MicroMSModel(object):
         offset: offset from the current circumference, 
         offset > 0 places spots outside the current blob
         '''
-        self.savedBlobs = self.blobCollection[self.currentBlobs]
-        self.blobCollection[self.currentBlobs] = \
-            blobUtilities.circularPackPoints(self.blobCollection[self.currentBlobs], 
-                                            separation, maxShots, offset, minSpots = 4)
+        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
+        self.blobCollection[self.currentBlobs].circularPackPoints(separation, maxShots, offset, minSpots = 4)
 
     def analyzeAll(self):
         '''
@@ -389,8 +376,8 @@ class MicroMSModel(object):
             self.coordinateMapper.connectedInstrument.connected == False:
            return "No connected instrument"
 
-        targets = list(map(lambda x: self.coordinateMapper.translate(x), 
-                            blob.blob.getXYList(self.blobCollection[self.currentBlobs])))
+        targets = list(map(lambda b: self.coordinateMapper.translate((b.X, b.Y)), 
+                            self.blobCollection[self.currentBlobs].blobs))
 
         #send to connected instrument
         self.coordinateMapper.connectedInstrument.collectAll(targets)
@@ -428,7 +415,7 @@ class MicroMSModel(object):
         '''
         self.slide.lvl = 0
         if self.slide is not None:
-            self.tempBlobs = self.blobFinder.blobImg()
+            self.tempBlobs = self.blobCollection[self.currentBlobs].blobFinder.blobImg()
 
     def setCurrentBlobs(self, ind):
         '''
@@ -455,8 +442,8 @@ class MicroMSModel(object):
         #show the threshold image produced by blobfinder helper method
         if self.showThreshold:
             im, num = blobFinder.blobFinder._blbThresh(self.slide.getImg(),
-                                                        self.blobFinder.colorChannel,
-                                                        self.blobFinder.threshold)
+                                                        self.blobCollection[self.currentBlobs].blobFinder.colorChannel,
+                                                        self.blobCollection[self.currentBlobs].blobFinder.threshold)
             return im                                  
         #else, use current image view     
         else:
@@ -519,103 +506,38 @@ class MicroMSModel(object):
                     )
 
         #draw region of interest
-        ptches.extend(self.getROIPathces())
+        ptches.extend(self.getROIPatches())
 
         #draw histogram labels
         if self.histogramBlobs is not None and len(self.histogramBlobs) != 0:
             for blbs in self.histogramBlobs:
-                if len(blbs[0]) > 0:
-                    blobs = blbs[0]
-                    points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-                    if limitDraw and len(points) > GUIConstants.DRAW_LIMIT:
-                        points = [points[i] for i in range(0, len(points),
-                                                            len(points)//GUIConstants.DRAW_LIMIT)]
-                        inds = [inds[i] for i in range(0, len(points),
-                                                        len(points)//GUIConstants.DRAW_LIMIT)]
-
-                    for i,p in enumerate(points):
-                        ptches.append(
-                                plt.Circle(
-                                        p, blobs[inds[i]].radius/2**self.slide.lvl,
-                                        color = blbs[1],
-                                        linewidth = 1,
-                                        fill = False
-                                    )
-                            )
+                ptches.extend(blbs.getPatches(limitDraw, self.slide))
         #draw blobs
         else:
             #draw all blob lists with their own color
             if self.drawAllBlobs == True:
-                for j, blobs in enumerate(self.blobCollection):
-                    points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-                    #show only a subset of the blobs
-                    if limitDraw and len(points) > GUIConstants.DRAW_LIMIT:
-                        points = [points[i] for i in range(0, len(points),
-                                                           len(points)//GUIConstants.DRAW_LIMIT)]
-                        inds = [inds[i] for i in range(0, len(points),
-                                                       len(points)//GUIConstants.DRAW_LIMIT)]
+                for blobs in self.blobCollection:
+                    ptches.extend(blobs.getPatches(limitDraw, self.slide))
 
-                    #add to patches
-                    for i,p in enumerate(points):
-                        ptches.append(
-                                plt.Circle(
-                                        p, blobs[inds[i]].radius/2**self.slide.lvl,
-                                        color = GUIConstants.MULTI_BLOB[j],
-                                        linewidth = 1,
-                                        fill = False
-                                    )
-                            )
             #show only the current blob list
             else:
-                blobs = self.blobCollection[self.currentBlobs]
-                points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-                #get subset of blobs
-                if limitDraw and len(points) > GUIConstants.DRAW_LIMIT:
-                    points = [points[i] for i in range(0, len(points),
-                                                        len(points)//GUIConstants.DRAW_LIMIT)]
-                    inds = [inds[i] for i in range(0, len(points),
-                                                    len(points)//GUIConstants.DRAW_LIMIT)]
-                #add to patches
-                for i,p in enumerate(points):
-                    ptches.append(
-                            plt.Circle(
-                                    p, blobs[inds[i]].radius/2**self.slide.lvl,
-                                    color = GUIConstants.MULTI_BLOB[self.currentBlobs],
-                                    linewidth = 1,
-                                    fill = False
-                                )
-                        )
+                ptches.extend(self.blobCollection[self.currentBlobs].getPatches(limitDraw, self.slide))
 
         #return list of patches as a patch collection, if none match_original must be false
         return PatchCollection(ptches, match_original=(len(ptches) != 0))
 
-    def getROIPathces(self, newPoint = None):
+    def getROIPatches(self, newPoint = None):
         ptches = []
-        tROI = self.getROI(newPoint)
+        tROI = self.blobCollection[self.currentBlobs].getROI(newPoint, GUIConstants.ROI_DIST *2**self.slide.lvl)
 
         if len(tROI) > 1:
-            if len(tROI) == 2:
-                p1 = self.slide.getLocalPoint(tROI[0])
-                p2 = self.slide.getLocalPoint(tROI[1])
-                
-                lowerL = ((min(p1[0], p2[0]), 
-                                min(p1[1], p2[1])))
-                x = abs(p1[0]- p2[0])   
-                y = abs(p1[1]- p2[1])                               
-                ptches.append(plt.Rectangle(lowerL, x, y, 
-                                             color=GUIConstants.ROI, 
-                                             fill=False))
-            else:
-                verts = []
-                codes = [Path.LINETO] * len(tROI)
-                for roi in tROI:
-                    verts.append(self.slide.getLocalPoint(roi))
-                verts.append(self.slide.getLocalPoint(tROI[0]))
-                codes[0] = Path.MOVETO
-                codes.append(Path.CLOSEPOLY)
-                ptches.append(mpl.patches.PathPatch(Path(verts, None),
-                                                    color = GUIConstants.ROI,
-                                                    fill = False))
+            verts = []
+            for roi in tROI:
+                verts.append(self.slide.getLocalPoint(roi))
+            verts.append(self.slide.getLocalPoint(tROI[0]))
+            ptches.append(mpl.patches.PathPatch(Path(verts, None),
+                                                color = GUIConstants.ROI,
+                                                fill = False))
 
         return ptches
 
@@ -624,70 +546,8 @@ class MicroMSModel(object):
         Handles ROI additions and removals based on position
         point: the point in global coordinates
         '''
-        self.ROI = self.getROI(point)
-        
-    def getROI(self, point):
-        '''
-        Performs checks and additions to interacting with an ROI. Does not alter ROI
-        point: global point to check
-        returns a new list of tuples of the ROI
-        '''
-        result = self.ROI.copy()
-        if point is not None and len(self.ROI) > 2:
-            #find distances between point and ROI
-            dists = pdist([point] + result)[:len(result)]
-            #remove first point with dist <= ROI_DIST
-            for i,d in enumerate(dists):
-                if d < GUIConstants.ROI_DIST *2**self.slide.lvl:
-                    result.pop(i)
-                    return result
-
-            #add between the two closest dists
-            dists = np.append(dists, dists[0])
-            dist2 = []
-            for i in range(len(dists) -1):
-                dist2.append(dists[i] + dists[i+1])
-            #quick, no check for intersection
-            #result.insert(np.argmin(dist2)+1, point)
-
-            #slower, checks for overlapping, returns the shortest distance without overlap
-            pos = np.argsort(dist2)
-            for p in pos:
-                #check first leg of path
-                segment = Path([result[p], point])
-                testSeg = Path(result[p+1:] + result[:p], [Path.MOVETO] + [Path.LINETO]*(len(result)-2))
-                if testSeg.intersects_path(segment):
-                    continue
-
-                #check second leg of path
-                if p+1 == len(result):
-                    segment = Path([point, result[0]])
-                    testSeg = Path(result[1:], [Path.MOVETO] + [Path.LINETO]*(len(result)-2))
-                    if testSeg.intersects_path(segment):
-                        continue
-                else:
-                    segment = Path([point, result[p+1]])
-                    testSeg = Path(result[p+2:] + result[:p+1], [Path.MOVETO] + [Path.LINETO]*(len(result)-2))
-                    if testSeg.intersects_path(segment):
-                        continue
-
-                #passed, return:
-                result.insert(p+1, point)
-                return result
-
-                ##build new path
-                #if p < len(result) -1:
-                #    newPath = Path([result[p], point, result[p+1]], [Path.MOVETO] + [Path.LINETO] *2)
-                #else:
-                #    newPath = Path([result[p], point, result[0]], [Path.MOVETO] + [Path.LINETO] *2)
-                #if not newPath.intersects_path(Path(result + [result[0]], [Path.MOVETO] + [Path.LINETO] * len(result)), filled=False):
-                #    result.insert(p+1, point)
-                #    return result
-
-        elif point is not None:
-            result.append(point)
-            
-        return result
+        self.blobCollection[self.currentBlobs].ROI = \
+            self.blobCollection[self.currentBlobs].getROI(point, GUIConstants.ROI_DIST *2**self.slide.lvl)
 
     def drawLabels(self, axes):
         '''
@@ -722,36 +582,35 @@ class MicroMSModel(object):
             pass
         #normal blobs can have group labels
         else:
+            pass
             #show group names of all lists
             if self.drawAllBlobs == True:
-                for j, blobs in enumerate(self.blobCollection):
-                    #first blob in list must have a group
-                    #may be a good idea to do this check in the new list object differently
-                    if len(blobs) != 0 and blobs[0].group is not None:
-                        points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-                        drawnlbls = set()          
-                        for i,p in enumerate(points):
-                            if blobs[inds[i]].group not in drawnlbls:
-                                axes.text(p[0]+GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-                                                p[1]-GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-                                                blobs[inds[i]].group,
-                                                fontsize=lineWid+6, 
-                                                color=GUIConstants.EXPANDED_TEXT)
-                                drawnlbls.add(blobs[inds[i]].group)
+                for blobs in self.blobCollection:
+                    self._drawBlobLabels(axes, blobs, lineWid)
+
             #show only the current list
             else:
-                blobs = self.blobCollection[self.currentBlobs]
-                if len(blobs) != 0 and blobs[0].group is not None:
-                    points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(blobs))
-                    drawnlbls = set()          
-                    for i,p in enumerate(points):
-                        if blobs[inds[i]].group not in drawnlbls:
-                            axes.text(p[0]+GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-                                            p[1]-GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
-                                            blobs[inds[i]].group,
-                                            fontsize=lineWid+6, 
-                                            color=GUIConstants.EXPANDED_TEXT)
-                            drawnlbls.add(blobs[inds[i]].group)
+                self._drawBlobLabels(axes, self.blobCollection[self.currentBlobs], lineWid)
+
+    def _drawBlobLabels(self, axes, blobs, lineWid):
+        '''
+        Helper method to draw blob labels onto the provided axis
+        axes: matplotlib axes to draw text to
+        blobs: blobList with labels to draw
+        lineWid: the linewidth to use for drawing 
+        '''
+        #get grouplabels from blobs
+        labels = list(blobs.groupLabels.keys())
+        pos = list(blobs.groupLabels.values())
+        if len(labels) != 0:
+            points, inds = self.slide.getPointsInBounds(pos)
+            for i,p in enumerate(points):
+                #add offset from normal position
+                axes.text(p[0]+GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
+                                p[1]-GUIConstants.DEFAULT_RADIUS/2**self.slide.lvl,
+                                labels[inds[i]],
+                                fontsize=lineWid+6, 
+                                color=GUIConstants.EXPANDED_TEXT)
 
     def reportInfoRequest(self, localPoint):
         '''
@@ -769,14 +628,14 @@ class MicroMSModel(object):
         if self.GUI is not None and self.GUI.showHist:
             #find cell if user clicked in bounds
             if self.blobCollection[self.currentBlobs] is not None and \
-                len(self.blobCollection[self.currentBlobs]) > 0:
+                self.blobCollection[self.currentBlobs].length() > 0:
 
-                points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(self.blobCollection[self.currentBlobs]))
+                points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(self.blobCollection[self.currentBlobs].blobs))
                 found = False
                 for i,p in enumerate(points):
                     #see if click point is within radius
                     if (localPoint[0]-p[0])**2 + (localPoint[1] - p[1])**2 <= \
-                        (self.blobCollection[self.currentBlobs][inds[i]].radius/2**self.slide.lvl)**2:
+                        (self.blobCollection[self.currentBlobs].blobs[inds[i]].radius/2**self.slide.lvl)**2:
                             self.GUI.histCanvas.singleCell = inds[i]
                             found = True
                             break
@@ -792,7 +651,7 @@ class MicroMSModel(object):
 
         #get the size and circ of an area > thresh if on blb view
         if self.showThreshold:
-            area,circ = self.blobFinder.getBlobCharacteristics(localPoint)
+            area,circ = self.blobCollection[self.currentBlobs].blobFinder.getBlobCharacteristics(localPoint)
             return "x = %d, y = %d r,g,b = %d,%d,%d\tArea = %d\tCirc = %.2f"%(point[0], point[1], r, g, b, area, circ)
         #show rgb and x,y location
         else:
@@ -852,32 +711,12 @@ class MicroMSModel(object):
         #no slide to add blobs onto
         if self.slide is None:
             return "No slide loaded"
-
-        curBlbs = self.blobCollection[self.currentBlobs]
+        
         globalPnt = self.slide.getGlobalPoint(localPoint)
-        #try to find mouse click position
-        if len(curBlbs) > 0:
-            points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(curBlbs))
-            foundPoint = False
-            for i,p in enumerate(points):
-                #see if click point is within radius
-                if not foundPoint and \
-                    (localPoint[0]-p[0])**2 + (localPoint[1] - p[1])**2 <= \
-                    (curBlbs[inds[i]].radius/2**self.slide.lvl)**2:
-                        #remove point
-                        foundPoint = True
-                        curBlbs.pop(inds[i])
-                        return "Removed blob at {}, {}".format(globalPnt[0], globalPnt[1])
-
-            #add new point
-            if not foundPoint:
-                curBlbs.append(blob.blob(x = globalPnt[0], y = globalPnt[1], radius = radius))
-                return "Adding blob at {}, {}".format(globalPnt[0], globalPnt[1])
-
-        #first point added
-        else:
-            curBlbs.append(blob.blob(x = globalPnt[0], y = globalPnt[1], radius = radius))
+        if self.blobCollection[self.currentBlobs].blobRequest(globalPnt, radius) == True:
             return "Adding blob at {}, {}".format(globalPnt[0], globalPnt[1])
+        else:
+            return "Removed blob at {}, {}".format(globalPnt[0], globalPnt[1])
 
     def requestInstrumentMove(self, localPoint):
         '''

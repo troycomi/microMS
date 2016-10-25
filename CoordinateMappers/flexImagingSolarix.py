@@ -29,13 +29,13 @@ class flexImagingSolarix(solarixMapper):
             return
         output = open(filename, 'w')
         output.write('# X-pos Y-pos spot-name region\n')
-        for i,p in enumerate(blob.getXYList(blobs)):
-            phys = self.translate(p)
-            if blobs[i].group is not None:
+        for b in blobs:
+            phys = self.translate((b.X, b.Y))
+            if b.group is not None:
                 output.write('{0:.0f} {1:.0f} s{4}_x{2:.0f}_y{3:.0f} 01\n'
-                             .format(phys[0], -phys[1], p[0], p[1], blobs[i].group))
+                             .format(phys[0], -phys[1], b.X, b.Y, b.group))
             else:
-                output.write('{0:.0f} {1:.0f} x{2:.0f}_y{3:.0f} 01\n'.format(phys[0], -phys[1], p[0], p[1]))
+                output.write('{0:.0f} {1:.0f} x{2:.0f}_y{3:.0f} 01\n'.format(phys[0], -phys[1], b.X, b.Y))
         output.close()
 
     def loadInstrumentFile(self, filename):

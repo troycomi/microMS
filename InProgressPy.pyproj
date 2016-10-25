@@ -81,9 +81,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GUICanvases\histCanvas.py" />
-    <Compile Include="ImageUtilities\blobUtilities.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ImageUtilities\__init__.py">
       <SubType>Code</SubType>
     </Compile>

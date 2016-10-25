@@ -157,17 +157,17 @@ class oMaldiMapper(coordinateMapper.CoordinateMapper):
         points = [];                
                 
         output = open(filename[0:-4] + '.txt', 'w')
-        for i,p in enumerate(blob.blob.getXYList(blobs)):
-            trans = self.translate(p)
+        for b in blobs:
+            trans = self.translate((b.X,b.Y))
             result = scale * rot * np.matrix([[trans[0]],[-trans[1]]]) + transl
             points.append((result[0,0], result[1,0]))
-            if blobs[i].group is not None:
-                output.write('{0:.0f}\t{1:.0f}\t{2}\n'.format(p[0], p[1], blobs[i].group))
+            if b.group is not None:
+                output.write('{0:.0f}\t{1:.0f}\t{2}\n'.format(b.X, b.Y, b.group))
             else:
-                output.write('{0:.0f}\t{1:.0f}\n'.format(p[0], p[1]))
+                output.write('{0:.0f}\t{1:.0f}\n'.format(b.X, b.Y))
         output.close()
 
-        points = self.SlopCorrection(points,slop, slop)        
+        points = self.SlopCorrection(points, slop, slop)        
         
         output = open(filename, 'w')
         for p in points:

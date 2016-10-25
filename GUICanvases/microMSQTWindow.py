@@ -6,7 +6,6 @@ from CoordinateMappers import supportedCoordSystems
 from CoordinateMappers import connectedInstrument
 
 from ImageUtilities.slideWrapper import SlideWrapper
-from ImageUtilities import blobUtilities
 from ImageUtilities.enumModule import Direction, StepSize
 
 from GUICanvases.histCanvas import HistCanvas
@@ -56,7 +55,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             'histHelp'      :   self.createMessageBox(GUIConstants.HISTOGRAM_HOTKEYS, 'Histogram Help'),
             'blobFind'      :   blbPopupWindow(self),
             'grid'          :   gridPopupWindow(self),
-            'histOpts'      :   histPopupWindow(self)
+            'histOpts'      :   histPopupWindow(self.histCanvas, self)
             }
         
         self.setupMenu()
@@ -154,6 +153,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         #cell position options
         self.tools_menu.addSeparator()
         self.tools_menu.addAction('Distance Filter',self.distanceFilter)
+        self.tools_menu.addAction('ROI Filter',self.roiFilter)
+        self.tools_menu.addSeparator()
         self.tools_menu.addAction('Rectangular Pack', self.rectPack)
         self.tools_menu.addAction('Hexagonal Pack', self.hexPack)
         self.tools_menu.addAction('Circular Pack', self.circPack)
@@ -264,6 +265,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.setWindowTitle('MicroMS: ' + self.fileName)
         self.showHist = False
         self.histCanvas.resetVariables(True, True)
+        self.histCanvas.hide()
         self.model.reportSize((float(self.slideCanvas.size().width()),
                                float(self.slideCanvas.size().height())))
         self.model.slide.resetView()
@@ -651,8 +653,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                
         if filt is not None:
             message = self.histCanvas.getFilterDescription()
-            self.model.filters.append(message)
             oldBlbs = self.model.updateCurrentBlobs(filt)
+            self.model.blobCollection[self.model.currentBlobs].filters.append(message)
             self.statusBar().showMessage(
                 message + "; original set in list {}".format(oldBlbs+1))
             self.histCanvas.calculateHist()
@@ -680,6 +682,17 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.slideCanvas.draw()
             self.raise_()
             self.activateWindow()
+
+    def roiFilter(self):
+        '''
+        Performs filtering of cells falling within the ROI
+        '''
+        self.statusBar().showMessage(
+            self.model.roiFilter()
+            )
+        if self.showHist:
+            self.histCanvas.calculateHist()
+        self.slideCanvas.draw()
 
     def rectPack(self, extras = None):
         '''
@@ -938,7 +951,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     self.histCanvas.resetVariables(True, True)
                 #clears filters and ROI positions
                 else:
-                    self.model.ROI = []
+                    self.model.blobCollection[self.model.currentBlobs].ROI = []
                     self.histCanvas.clearFilt()
                 
             keys = [QtCore.Qt.Key_1, QtCore.Qt.Key_2, QtCore.Qt.Key_3, 

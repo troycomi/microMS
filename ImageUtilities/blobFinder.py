@@ -37,6 +37,20 @@ class blobFinder(object):
         self.threshold = threshold
         self.imageIndex = imageIndex
 
+    def copyParameters(self, other):
+        '''
+        Copies cell finding parameters from another cellFinder instance
+        other: blobFinder object to copy parameters from
+        '''
+        self.minSize = other.minSize
+        self.maxSize = other.maxCircularity
+        self.minCircularity = other.minCircularity
+        self.maxCircularity = other.maxCircularity
+        self.colorChannel = other.colorChannel
+        self.threshold = other.threshold
+        self.imageIndex = other.imageIndex
+
+
     def getParameters(self):
         '''
         get the set of parameters as a dictionary
@@ -134,7 +148,7 @@ class blobFinder(object):
         
     @staticmethod
     def _blbHelp(img, sizes, channel = 2, threshold = 200,
-                 circs = (0.7,None)):
+                 circs = (0.7,None), xShift=0, yShift = 0):
         '''
         helper function to perform blob finding on the image
         returns a list of blobs
@@ -143,6 +157,8 @@ class blobFinder(object):
         channel: r,g,b channel to threshold
         threshold: minimum pixel intensity to count as cell
         circs: (min, max) circularity to consider max == None means no max
+        xShift: amount to add to x coordinate to shift into global coordinate
+        yShift: amount to add to x coordinate to shift into global coordinate
         '''
         #blob find
         lbl, num = blobFinder._blbThresh(img, channel, threshold)
@@ -169,8 +185,10 @@ class blobFinder(object):
                     #calculate radius assuming circle
                     r = np.sqrt(area/np.pi)
                     #add to result, note x,y transpose!
-                    result.append(blob(y=x+dx.start-1, x = y+dy.start-1, 
-                                       radius = r, circularity = circ))
+                    result.append(blob(y=x+dx.start-1+yShift, 
+                                       x = y+dy.start-1+xShift, 
+                                       radius = r, 
+                                       circularity = circ))
         return result
     
     @staticmethod
@@ -202,7 +220,7 @@ class blobFinder(object):
         returns a list of blobs in image
         subSize: size in pixels of one side of the subregion to iterate over
             larger values may use up lots of RAM
-        ROI: a list of two points for a rectangular ROI or more for a polygon
+        ROI: a list of points for ROI polygon.  Only used to determine bounding box.
         '''
         #the amount of overlap between regions, would matter with larger objects but I currently ignore this
         overlap = 0
@@ -240,22 +258,14 @@ class blobFinder(object):
             #blob find
             blb = blobFinder._blbHelp(inputImg, (self.minSize, self.maxSize), 
                                       self.colorChannel, self.threshold, 
-                                      (self.minCircularity, self.maxCircularity))
-            
-            for b in blb:
-                #TODO: probably make this faster, especially inBounds can go in blob list
-                #remap x,y values to global coordinate
-                b.shiftCoord(cent[0] - subSize/2, 
-                            cent[1] - subSize/2)
-                #retain blobs only within ROI
-                if b.inBounds(ROI):
-                    blbs.append(b)
+                                      (self.minCircularity, self.maxCircularity),
+                                      cent[0]-subSize/2, cent[1]-subSize/2)
+            blbs.extend(blb)
             #print out expected time remaining, not super accurate
             if i % 10 == 0 or i == 1:
                 print("finished %d of %d subareas, %d seconds left" % (i, total, (time.time()-start)/ i * (total-i)))
             i = i+1
             
         print("took {:.3f} minutes".format((time.time() - start)/60))
-        print("found {} cells".format(len(blbs)))
         
         return blbs            
