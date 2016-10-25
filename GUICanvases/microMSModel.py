@@ -14,7 +14,6 @@ from GUICanvases import GUIConstants
 
 from ImageUtilities import slideWrapper
 from ImageUtilities import blobFinder
-from ImageUtilities.blobUtilities import blobUtilities
 from ImageUtilities import blob
 from ImageUtilities import TSPutil
 from ImageUtilities.enumModule import Direction, StepSize
@@ -149,7 +148,7 @@ class MicroMSModel(object):
         #save different divisions
         f, ex = os.path.splitext(filename)
         for blbs in self.histogramBlobs:
-            if len(blbs[0]) > 0:
+            if blbs.length() > 0:
                 blbs.saveBlobs('{}_{}_{}{}'.format(f, blbs.description, blbs.threshCutoff, ex))
         return "Saved histogram divisions with base name {}".format(os.path.split(f)[1])
 
@@ -160,12 +159,12 @@ class MicroMSModel(object):
             dir/test.txt -> dir/test_1.txt
         '''
         #slide not set up
-        if self.blobFinder is None:
+        if self.slide is None:
             return "No slide loaded"
         f, ex = os.path.splitext(filename)
         #save each blob list
         for i, blbs in enumerate(self.blobCollection):
-            if len(blbs) > 0:
+            if blbs.length() > 0:
                 blbs.saveBlobs('{}_{}{}'.format(f, i, ex))
 
         return "Saved blobs with base name '{}'".format(os.path.split(f)[1])
@@ -289,6 +288,8 @@ class MicroMSModel(object):
         return self.blobCollection[self.currentBlobs].blobSlide()
 
     def updateCurrentBlobs(self, newBlobs):
+        if not isinstance(newBlobs, blobList.blobList):
+            raise ValueError('New blobs must be a blobList')
         self.savedBlobs, self.blobCollection[self.currentBlobs] = \
             self.blobCollection[self.currentBlobs], newBlobs
         #find first unused blob index
@@ -441,8 +442,8 @@ class MicroMSModel(object):
         #show the threshold image produced by blobfinder helper method
         if self.showThreshold:
             im, num = blobFinder.blobFinder._blbThresh(self.slide.getImg(),
-                                                        self.blobFinder.colorChannel,
-                                                        self.blobFinder.threshold)
+                                                        self.blobCollection[self.currentBlobs].blobFinder.colorChannel,
+                                                        self.blobCollection[self.currentBlobs].blobFinder.threshold)
             return im                                  
         #else, use current image view     
         else:
@@ -627,14 +628,14 @@ class MicroMSModel(object):
         if self.GUI is not None and self.GUI.showHist:
             #find cell if user clicked in bounds
             if self.blobCollection[self.currentBlobs] is not None and \
-                len(self.blobCollection[self.currentBlobs]) > 0:
+                self.blobCollection[self.currentBlobs].length() > 0:
 
-                points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(self.blobCollection[self.currentBlobs]))
+                points, inds = self.slide.getPointsInBounds(blob.blob.getXYList(self.blobCollection[self.currentBlobs].blobs))
                 found = False
                 for i,p in enumerate(points):
                     #see if click point is within radius
                     if (localPoint[0]-p[0])**2 + (localPoint[1] - p[1])**2 <= \
-                        (self.blobCollection[self.currentBlobs][inds[i]].radius/2**self.slide.lvl)**2:
+                        (self.blobCollection[self.currentBlobs].blobs[inds[i]].radius/2**self.slide.lvl)**2:
                             self.GUI.histCanvas.singleCell = inds[i]
                             found = True
                             break
@@ -650,7 +651,7 @@ class MicroMSModel(object):
 
         #get the size and circ of an area > thresh if on blb view
         if self.showThreshold:
-            area,circ = self.blobFinder.getBlobCharacteristics(localPoint)
+            area,circ = self.blobCollection[self.currentBlobs].blobFinder.getBlobCharacteristics(localPoint)
             return "x = %d, y = %d r,g,b = %d,%d,%d\tArea = %d\tCirc = %.2f"%(point[0], point[1], r, g, b, area, circ)
         #show rgb and x,y location
         else:

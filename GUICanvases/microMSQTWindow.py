@@ -6,7 +6,6 @@ from CoordinateMappers import supportedCoordSystems
 from CoordinateMappers import connectedInstrument
 
 from ImageUtilities.slideWrapper import SlideWrapper
-from ImageUtilities import blobUtilities
 from ImageUtilities.enumModule import Direction, StepSize
 
 from GUICanvases.histCanvas import HistCanvas
@@ -56,7 +55,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             'histHelp'      :   self.createMessageBox(GUIConstants.HISTOGRAM_HOTKEYS, 'Histogram Help'),
             'blobFind'      :   blbPopupWindow(self),
             'grid'          :   gridPopupWindow(self),
-            'histOpts'      :   histPopupWindow(self)
+            'histOpts'      :   histPopupWindow(self.histCanvas, self)
             }
         
         self.setupMenu()
@@ -654,8 +653,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                
         if filt is not None:
             message = self.histCanvas.getFilterDescription()
-            self.model.filters.append(message)
             oldBlbs = self.model.updateCurrentBlobs(filt)
+            self.model.blobCollection[self.model.currentBlobs].filters.append(message)
             self.statusBar().showMessage(
                 message + "; original set in list {}".format(oldBlbs+1))
             self.histCanvas.calculateHist()

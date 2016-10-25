@@ -8,7 +8,6 @@ from GUICanvases.mplCanvas import MplCanvas
 from GUICanvases import GUIConstants
 
 from ImageUtilities.blobFinder import blobFinder
-from ImageUtilities.blobUtilities import blobUtilities
 from ImageUtilities.blobList import blobList
 
 class HistCanvas(MplCanvas):
@@ -112,7 +111,7 @@ class HistCanvas(MplCanvas):
 
         #metric == 5 -> look at minimum distance between samples
         elif self.populationMetric == 5:
-            self.populationValues = np.array(blobUtilities.minimumDistances(self.blobSet.blobs))
+            self.populationValues = np.array(self.blobSet.minimumDistances())
             self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
 
         #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
@@ -394,12 +393,11 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.LOW_BAR)
                 #add the low threshold blobs to the blob subset to pass to slideCanvas
                 if np.any(tempbool2):
-                    blbSubset.append(blobList())
+                    blbSubset.append(copy(self.blobSet))
                     blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool2)[0]]
                     blbSubset[-1].color = GUIConstants.LOW_BAR
                     blbSubset[-1].description = 'low'
                     blbSubset[-1].threshCutoff = int(self.lowIntens)
-                    #TODO add in blobfinder
                 
             #handle high intens
             if self.highIntens is not None:
@@ -414,7 +412,7 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.HIGH_BAR)
                 #add the high threshold blobs to the blob subset to pass to slideCanvas
                 if np.any(tempbool2):
-                    blbSubset.append(blobList())
+                    blbSubset.append(copy(self.blobSet))
                     blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool2)[0]]
                     blbSubset[-1].color = GUIConstants.HIGH_BAR
                     blbSubset[-1].description = 'high'
@@ -430,7 +428,7 @@ class HistCanvas(MplCanvas):
                               width = self.bins[0]-self.bins[1], color = GUIConstants.SINGLE_BAR)
                 #add the single bar blobs to the subset for slideCanvas
                 if np.any((self.populationValues < self.bins[ind]) & (self.populationValues >= self.bins[ind-1])):
-                    blbSubset.append(blobList())
+                    blbSubset.append(copy(self.blobSet))
                     blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where((self.populationValues < self.bins[ind]) 
                                                                        & (self.populationValues >= self.bins[ind-1]))[0]]
                     blbSubset[-1].color = GUIConstants.SINGLE_BAR

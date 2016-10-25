@@ -29,9 +29,9 @@ class blobList(object):
         self.groupLabels = dict()
         ##Add any new instance vars to deepcopy!
 
-    def append(self, blob):
-        if isinstance(blob, 'blob'):
-            self.blobs.append(blobs)
+    def append(self, blb):
+        if isinstance(blb, blob.blob):
+            self.blobs.append(blb)
 
     def length(self):
         return len(self.blobs)
@@ -191,6 +191,9 @@ class blobList(object):
             return
         roi = Path(self.ROI)
         points = np.array([ (b.X,b.Y) for b in self.blobs])
+        if points.size == 0:
+            self.blobs = []
+            return
         self.blobs = [self.blobs[i] for i in np.argwhere(roi.contains_points(points))]
 
     def distanceFilter(self, dist, subblocks = None, verbose = False):
@@ -213,7 +216,7 @@ class blobList(object):
         #initialize result and determine subblocks
         result = [False] * len(self.blobs)
         if subblocks is None:
-            subblocks = int(np.ceil(np.sqrt(len(blobs)/100)))
+            subblocks = int(np.ceil(np.sqrt(len(self.blobs)/100)))
             subblocks = min(subblocks, 5)
 
         subLocs = self._groupBlobs(dist, subblocks)
@@ -227,8 +230,8 @@ class blobList(object):
                 locs = np.zeros((n,2))
                 #populate locs
                 for ii,v in enumerate(subLocs[i][j]):
-                    locs[ii,0] = blobs[v].X
-                    locs[ii,1] = blobs[v].Y
+                    locs[ii,0] = self.blobs[v].X
+                    locs[ii,1] = self.blobs[v].Y
                 #distance filter the sub region list
                 #tooClose[i] == true if point[i] is too close to a neighbor
                 tooClose = blobList._distFilter(locs, dist)
@@ -241,7 +244,7 @@ class blobList(object):
         #report to console
         if verbose: print("Done! {} cells within {} pixels, {} remaining".format(count, dist, len(result) - count))
         
-        self.blobs = [self.blobs[i] for i in np.where(result)]
+        self.blobs = [self.blobs[i] for i in np.argwhere(result)]
         self.filters.append("distance > {}".format(dist))
 
     
@@ -271,9 +274,7 @@ class blobList(object):
                     result[j] = True
         return result
 
-    
-    @staticmethod
-    def minimumDistances(blobs, subblocks = None, overlap = 250):
+    def minimumDistances(self, subblocks = None, overlap = 250):
         '''
         Calculate the minimum distance between each blob.
         Similar algorithm to distFilter, but records the min distance
@@ -285,17 +286,17 @@ class blobList(object):
             the maximum, reliable distance reported
         '''
 
-        if blobs is None or len(blobs) == 0:
+        if self.blobs is None or self.length() == 0:
             return None
         
         #initialize result
-        result = [float("inf")] * len(blobs)
+        result = [float("inf")] * len(self.blobs)
         #determine subblocks size
         if subblocks is None:
-            subblocks = int(np.ceil(np.sqrt(len(blobs)/100)))
+            subblocks = int(np.ceil(np.sqrt(len(self.blobs)/100)))
             subblocks = min(subblocks, 5)
 
-        subLocs = blobUtilities._groupBlobs(blobs, overlap, subblocks)
+        subLocs = self._groupBlobs(overlap, subblocks)
 
         #for each sub region list
         for i in range(subblocks+1):
@@ -306,10 +307,10 @@ class blobList(object):
                 locs = np.zeros((n,2))
                 #add points into locs
                 for ii,v in enumerate(subLocs[i][j]):
-                    locs[ii,0] = blobs[v].X
-                    locs[ii,1] = blobs[v].Y
+                    locs[ii,0] = self.blobs[v].X
+                    locs[ii,1] = self.blobs[v].Y
                 #calculate distances
-                dists = blobUtilities._minDists(locs)
+                dists = blobList._minDists(locs)
                 #recorde minimum of the reported distance and previous value
                 for k, d in enumerate(dists):
                     result[subLocs[i][j][k]] = min(result[subLocs[i][j][k]], d)
@@ -367,7 +368,7 @@ class blobList(object):
         result = [[[] for x in range(subblocks+1)] for y in range(subblocks+1)]
         
         #place indices of points into subLocs list
-        for i,v in enumerate(blobs):
+        for i,v in enumerate(self.blobs):
             #get divisor and remainder
             (xd, xm) = (0,0) if subX == 0 else divmod(v.X-lowX, subX)
             (yd, ym) = (0,0) if subY == 0 else divmod(v.Y-lowY, subY)

@@ -16,7 +16,6 @@ from GUICanvases.mplCanvas import MplCanvas
 from GUICanvases import GUIConstants
 from ImageUtilities import blobFinder
 from ImageUtilities import TSPutil
-from ImageUtilities.blobUtilities import blobUtilities
 from ImageUtilities import blob
 
 from CoordinateMappers import supportedCoordSystems

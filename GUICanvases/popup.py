@@ -167,6 +167,7 @@ class histPopupWindow(QtGui.QDialog):
         '''
         super(histPopupWindow,self).__init__(parent)
 
+        self.hist = histCanvas
         self.master = parent        
         
         self.setWindowTitle("Histogram Options")        
@@ -174,6 +175,8 @@ class histPopupWindow(QtGui.QDialog):
         #generate user io widgets
         self.imgInd = QtGui.QLineEdit(self)
         self.channel = QtGui.QComboBox(self)
+        for m in self.hist.metrics:
+            self.channel.addItem(m)
 
         self.offset = QtGui.QLineEdit(self)
         self.max = QtGui.QRadioButton(self)
