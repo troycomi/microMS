@@ -124,13 +124,13 @@ class blobList(object):
 
 
     def blobSlide(self):
-        ##TODO change roi in blobSlide to use blob filtering
         if len(self.ROI) == 0:
             self.blobs = self.blobFinder.blobSlide()
-            return "Finished blob finding on whole slide"
+            return "Finished blob finding on whole slide, found {} cells".format(len(self.blobs))
         else:
-            self.blobs = self.blobFinder.blobSlide(self.ROI)
-            return "Finished blob finding in ROI"
+            self.blobs = self.blobFinder.blobSlide(ROI = self.ROI)
+            self.roiFilter()
+            return "Finished blob finding in ROI, found {} cells".format(len(self.blobs))
 
     def getROI(self, point, distCutoff):
         '''

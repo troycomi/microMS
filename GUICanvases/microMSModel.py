@@ -414,7 +414,7 @@ class MicroMSModel(object):
         '''
         self.slide.lvl = 0
         if self.slide is not None:
-            self.tempBlobs = self.blobFinder.blobImg()
+            self.tempBlobs = self.blobCollection[self.currentBlobs].blobFinder.blobImg()
 
     def setCurrentBlobs(self, ind):
         '''
