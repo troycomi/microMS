@@ -205,8 +205,6 @@ class histPopupWindow(QtGui.QDialog):
         
         #generate user io widgets
         self.imgInd.setText(str(self.hist.imgInd+1))
-        for m in self.hist.metrics:
-            self.channel.addItem(m)
 
         self.channel.setCurrentIndex(self.hist.populationMetric)
         self.offset.setText(str(self.hist.offset))

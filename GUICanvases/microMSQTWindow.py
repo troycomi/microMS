@@ -266,6 +266,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.setWindowTitle('MicroMS: ' + self.fileName)
         self.showHist = False
         self.histCanvas.resetVariables(True, True)
+        self.histCanvas.hide()
         self.model.reportSize((float(self.slideCanvas.size().width()),
                                float(self.slideCanvas.size().height())))
         self.model.slide.resetView()
@@ -951,7 +952,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     self.histCanvas.resetVariables(True, True)
                 #clears filters and ROI positions
                 else:
-                    self.model.ROI = []
+                    self.model.blobCollection[self.model.currentBlobs].ROI = []
                     self.histCanvas.clearFilt()
                 
             keys = [QtCore.Qt.Key_1, QtCore.Qt.Key_2, QtCore.Qt.Key_3, 

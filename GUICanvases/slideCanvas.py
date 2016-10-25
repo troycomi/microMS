@@ -171,14 +171,17 @@ class SlideCanvas(MplCanvas):
 
         #mouse was dragged to draw an ROI
         if(self.mDown):
-                temp = self.model.ROI[0] = self.model.slide.getLocalPoint(self.model.ROI[0])
-                self.model.ROI[0] = (min(self.model.ROI[0][0], event.xdata), 
-                                   min(self.model.ROI[0][1], event.ydata))
-                self.model.ROI[0] = self.model.slide.getGlobalPoint(self.model.ROI[0])
-                self.model.ROI.append((max(temp[0], event.xdata), 
-                                   max(temp[1], event.ydata)))
-                self.model.ROI[1] = self.model.slide.getGlobalPoint(self.model.ROI[1])
-                self.mDown = False                                                                                             
+            #convert two point to a 4point rectangle
+            p1 = self.model.slide.getGlobalPoint((event.xdata, event.ydata))
+            p2 = self.model.slide.getGlobalPoint(self.ROI)
+            xlow, ylow = min(p1[0], p2[0]), min(p1[1], p2[1])
+            xhigh, yhigh = max(p1[0], p2[0]), max(p1[1], p2[1])
+            self.model.blobCollection[self.model.currentBlobs].ROI = [ (xlow, ylow),
+                                                                      (xlow, yhigh),
+                                                                      (xhigh, yhigh),
+                                                                      (xhigh, ylow)]
+
+            self.mDown = False                                                                                             
         self.draw()
         
     def mouseDown(self, event, extras = None):
@@ -201,8 +204,7 @@ class SlideCanvas(MplCanvas):
         if event.button == 1 and \
             modifiers == QtCore.Qt.ControlModifier:
             self.mDown = True
-            self.model.ROI = [] #reset ROI
-            self.model.ROI.append(self.model.slide.getGlobalPoint((event.xdata, event.ydata)))
+            self.ROI = (event.xdata, event.ydata)
 
         #target drawing
         elif event.button == 1 and \
@@ -281,7 +283,7 @@ class SlideCanvas(MplCanvas):
         pnt: the current point in local (image) coordinates
         '''
         if self.tempIm is not None:
-            tempStartP = self.model.slide.getLocalPoint(self.model.ROI[0])
+            tempStartP = self.ROI
             self.axes.imshow(self.tempIm)
             lowerL = ((min(tempStartP[0], pnt[0]), 
                               min(tempStartP[1], pnt[1])))

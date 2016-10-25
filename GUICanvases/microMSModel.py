@@ -318,7 +318,7 @@ class MicroMSModel(object):
     def roiFilter(self):
         if self.currentBlobLength() == 0:
             return "No blobs to filter"
-        if len(self.blobCollection[self.currentBlobs].ROI) < 2:
+        if len(self.blobCollection[self.currentBlobs].ROI) < 3:
             return "No ROI selected"
         self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
         startLen = self.currentBlobLength()
@@ -530,25 +530,13 @@ class MicroMSModel(object):
         tROI = self.blobCollection[self.currentBlobs].getROI(newPoint, GUIConstants.ROI_DIST *2**self.slide.lvl)
 
         if len(tROI) > 1:
-            if len(tROI) == 2:
-                p1 = self.slide.getLocalPoint(tROI[0])
-                p2 = self.slide.getLocalPoint(tROI[1])
-                
-                lowerL = ((min(p1[0], p2[0]), 
-                                min(p1[1], p2[1])))
-                x = abs(p1[0]- p2[0])   
-                y = abs(p1[1]- p2[1])                               
-                ptches.append(plt.Rectangle(lowerL, x, y, 
-                                             color=GUIConstants.ROI, 
-                                             fill=False))
-            else:                
-                verts = []
-                for roi in tROI:
-                    verts.append(self.slide.getLocalPoint(roi))
-                verts.append(self.slide.getLocalPoint(tROI[0]))
-                ptches.append(mpl.patches.PathPatch(Path(verts, None),
-                                                    color = GUIConstants.ROI,
-                                                    fill = False))
+            verts = []
+            for roi in tROI:
+                verts.append(self.slide.getLocalPoint(roi))
+            verts.append(self.slide.getLocalPoint(tROI[0]))
+            ptches.append(mpl.patches.PathPatch(Path(verts, None),
+                                                color = GUIConstants.ROI,
+                                                fill = False))
 
         return ptches
 
