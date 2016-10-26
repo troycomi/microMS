@@ -17,7 +17,7 @@ class blob(object):
         '''
         self.X = x
         self.Y = y
-        self.radius = radius
+        self.radius = float(radius)
         #keep circularity in bounds
         self.circularity = 1 if circularity > 1 else \
             (0 if circularity < 0 else circularity)

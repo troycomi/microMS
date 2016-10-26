@@ -211,7 +211,7 @@ class SlideCanvas(MplCanvas):
             self.mDownCirc = True
             self.startPC = self.model.slide.getGlobalPoint((event.xdata, event.ydata))
     
-    def mouseMove(self,event):
+    def mouseMove(self,event, extras = None):
         '''
         mouse moves redraw ROI or cell positions as appropriate
         event: an mpl mouse move event
@@ -223,7 +223,12 @@ class SlideCanvas(MplCanvas):
             return
 
         #ROI movement
-        modifiers = QtGui.QApplication.keyboardModifiers()
+
+        if extras is not None and hasattr(extras, 'modifiers'):
+            modifiers = extras.modifiers
+        else:
+            modifiers = QtGui.QApplication.keyboardModifiers()
+
         if self.mDown == True:
             self.redrawRect((event.xdata, event.ydata))
 
