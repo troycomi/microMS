@@ -174,7 +174,7 @@ class SlideWrapper(object):
                 return self.slides[imageInd][1].read_region(tempPos, 0, tempSize).resize(self.size)
             
             #same as above, but with 64x decimated image
-            elif  len(self.slides[imageInd]) > 2: 
+            elif  len(self.slides[imageInd]) > 2 and self.lvl-self.level_count < 8: 
                 tempPos[0] //= 64
                 tempPos[1] //= 64
                 tempSize = list(map(lambda x: round(x*2**(self.lvl-6)), self.size))

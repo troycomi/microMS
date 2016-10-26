@@ -263,7 +263,7 @@ class HistCanvas(MplCanvas):
             return 'Nothing to save'
         output = open(filename, 'w')
         output.write('Cell\t{}\n'.format(self.metrics[self.populationMetric]))
-        for i,b in enumerate(self.model.blobCollection[self.model.currentBlobs]):
+        for i,b in enumerate(self.model.blobCollection[self.model.currentBlobs].blobs):
             output.write('0_x_{0:.0f}y_{1:.0f}\t{2}\n'.format(b.X, b.Y, 
                                                               self.populationValues[i]))
         return 'Saved histogram values'
