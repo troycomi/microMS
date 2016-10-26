@@ -611,6 +611,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Saves the current figure image as a png
         extras: optional extra parameters to bypass GUI input
         '''
+        if self.showHist == False:
+            return
+
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtGui.QFileDialog.getSaveFileName(self,
                             "Select image file to save",

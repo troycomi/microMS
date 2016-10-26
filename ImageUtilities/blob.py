@@ -17,7 +17,7 @@ class blob(object):
         '''
         self.X = x
         self.Y = y
-        self.radius = radius
+        self.radius = float(radius)
         #keep circularity in bounds
         self.circularity = 1 if circularity > 1 else \
             (0 if circularity < 0 else circularity)
@@ -31,29 +31,6 @@ class blob(object):
         '''
         self.X += xShift
         self.Y += yShift
-
-    def inBounds(self, ROI):
-        '''
-        Test if the blob falls in the bounds specified by the coordinates
-        ROI: set of points for region of interest.  if len == 2, use as corners of rect
-        '''
-        if ROI is None or len(ROI) < 2:
-            return False
-        if len(ROI) == 2:
-            return self.X < max(ROI[0][0], ROI[1][0]) and\
-                self.Y < max(ROI[0][1], ROI[1][1]) and \
-                self.X > min(ROI[0][0], ROI[1][0]) and\
-                self.Y > min(ROI[0][1], ROI[1][1])
-        else:
-            #ROI is a polygon, check if point is in ROI
-            verts = []
-            codes = [mpl.path.Path.LINETO] * len(ROI)
-            for roi in ROI:
-                verts.append(roi)
-            verts.append(ROI[0])
-            codes[0] = mpl.path.Path.MOVETO
-            codes.append(mpl.path.Path.CLOSEPOLY)
-            return mpl.path.Path(verts, codes).contains_point((self.X, self.Y))
 
     @staticmethod
     def getXYList(blobs):

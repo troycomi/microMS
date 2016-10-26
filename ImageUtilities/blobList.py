@@ -4,6 +4,7 @@ from scipy.spatial.distance import pdist
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from copy import deepcopy
+import ast
 
 from GUICanvases import GUIConstants
 
@@ -73,9 +74,11 @@ class blobList(object):
         #save blob finding parameters
         for key, val in self.blobFinder.getParameters().items():
             output.write("{}\t{}\n".format(key,val))
+        #save ROI
+        output.write('ROI: {}\n'.format(self.ROI))
         #save histogram filters 
         if len(self.filters) != 0:
-            output.write("->{}->\n".format('->'.join(filters)))
+            output.write("->{}->\n".format('->'.join(self.filters)))
         else:
             output.write("->\n")
         #blb parameter header
@@ -99,9 +102,16 @@ class blobList(object):
             if len(toks) == 2:
                 #set blob finder parameters
                 self.blobFinder.setParameterFromSplitString(toks)
-            elif toks[0] != 'x':
+            elif toks[0] != 'x' and len(toks) > 2:
                 #add new blob
                 self.blobs.append(blob.blob.blobFromSplitString(toks))    
+            else:
+                #get filters
+                toks = l.split('->')
+                if len(toks) > 1:
+                    self.filters = toks[1:-1]
+                elif l[0:3] == 'ROI':
+                    self.ROI = ast.literal_eval(l[5:])
 
         self.generateGroupLabels()
 
@@ -212,7 +222,7 @@ class blobList(object):
         verbose: set if output message is printed to console
         '''
         if self.blobs is None or len(self.blobs) == 0:
-            return None
+            return
         #initialize result and determine subblocks
         result = [False] * len(self.blobs)
         if subblocks is None:
@@ -244,7 +254,7 @@ class blobList(object):
         #report to console
         if verbose: print("Done! {} cells within {} pixels, {} remaining".format(count, dist, len(result) - count))
         
-        self.blobs = [self.blobs[i] for i in np.argwhere(result)]
+        self.blobs = [self.blobs[i] for i in np.argwhere(~np.array(result))]
         self.filters.append("distance > {}".format(dist))
 
     
@@ -600,16 +610,7 @@ class blobList(object):
             todraw = [todraw[i] for i in range(0, len(todraw), 
                                                len(todraw)//GUIConstants.DRAW_LIMIT)]
 
-        return list(map(lambda b: plt.Circle((b.X,b.Y), b.radius,
+        return list(map(lambda el: plt.Circle((el[0],el[1]), el[2],
                                              color = self.color,
                                              linewidth = 1,
                                              fill = False), todraw))
-
-
-
-    #add in blob utilities
-    #add in patches and text draw
-    #add in xy list (iff needed)
-    #need to generalize enough to support hist blobs
-
-    #have to rewrite a lot of tests to replace lists of blobs with this!

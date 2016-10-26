@@ -174,7 +174,7 @@ class SlideWrapper(object):
                 return self.slides[imageInd][1].read_region(tempPos, 0, tempSize).resize(self.size)
             
             #same as above, but with 64x decimated image
-            elif  len(self.slides[imageInd]) > 2: 
+            elif  len(self.slides[imageInd]) > 2 and self.lvl-self.level_count < 8: 
                 tempPos[0] //= 64
                 tempPos[1] //= 64
                 tempSize = list(map(lambda x: round(x*2**(self.lvl-6)), self.size))
@@ -387,19 +387,21 @@ class SlideWrapper(object):
         """
         Test the supplied global points to see if they land in the current image.
         blobs: a list of blobs in global coordinates
-        returns a list of blobs in bounds translated into local image coordinate system with radius scaled to zoom level
+        returns a list of (x,y,r) translated into local image coordinate system with radius scaled to zoom level
         """
         if len(blobs) == 0:
             return []
         #get bounds of image in global coordinate
         xlow, ylow = self.getGlobalPoint((0,0))
         xhigh, yhigh = self.getGlobalPoint(self.size)
-        #create a mpl path to test inbounds
-        roi = Path([(xlow, ylow), (xlow, yhigh), (xhigh, yhigh), (xhigh, ylow)])
-        
-        points = np.array([ (b.X,b.Y) for b in blobs])
-        result = [blobs[i] for i in np.argwhere(roi.contains_points(points))]
-        return list(map(lambda b: blob.blob((b.X-xlow)/2**self.lvl, (b.Y-ylow)/2**self.lvl, b.radius/2**self.lvl, b.circularity, b.group), result))
+
+        return [((b.X-xlow)/2**self.lvl, 
+                (b.Y-ylow)/2**self.lvl, 
+                b.radius/2**self.lvl)
+                for b in blobs
+                if b.X > xlow and b.X < xhigh and\
+                    b.Y > ylow and b.Y < yhigh]
+
 
     def getSize(self):
         '''
