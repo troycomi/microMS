@@ -30,6 +30,8 @@ class HistCanvas(MplCanvas):
         self.blobSet = None
         #the image of the collection from slideWrapper to analyze
         self.imgInd = 1
+        #toggle to move the slide position to the first single cell
+        self.moveSlide = False
         
         #listeners for mouse interaction
         self.mpl_connect('button_release_event', self.mouseUp)
@@ -177,6 +179,7 @@ class HistCanvas(MplCanvas):
         if event.button == 2:
             self.singleBar = event.xdata
             self.master.reportFromModel('Clicked on {:.1f}'.format(event.xdata))
+            self.moveSlide = True
         
         #RMB to set high values
         if event.button == 3:
@@ -456,6 +459,10 @@ class HistCanvas(MplCanvas):
                     blbSubset[-1].color = GUIConstants.SINGLE_BAR
                     blbSubset[-1].description = 'single'
                     blbSubset[-1].threshCutoff = int(self.bins[ind])
+                    if self.moveSlide == True:
+                        firstBlob = blbSubset[-1].blobs[0]
+                        self.model.slide.pos = [firstBlob.X, firstBlob.Y]
+                        self.moveSlide = False
 
             #draw lines displaying the values used for filtering
             #a single blob to highlight
