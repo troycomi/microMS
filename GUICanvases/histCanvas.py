@@ -447,16 +447,16 @@ class HistCanvas(MplCanvas):
             if self.singleBar is not None:
                 temp = self.bins - self.singleBar
                 ind = int(np.sum(temp < 0))
-                ind = 0 if ind < 0 else len(self.bins)-1 if ind > len(self.bins) else ind
+                ind = 0 if ind < 0 else len(self.bins)-1 if ind >= len(self.bins) else ind
                 #draw the single bar
                 self.axes.bar(self.bins[ind], self.counts[ind], 
                               width = self.bins[0]-self.bins[1], color = GUIConstants.SINGLE_BAR)
                 #add the single bar blobs to the subset for slideCanvas
                 tempbool = (self.populationValues < self.bins[ind])
-                if ind != 0:
+                if ind == len(self.bins) -1:
+                    tempbool = self.populationValues >= self.bins[ind-1]
+                elif ind != 0:
                     tempbool = tempbool & (self.populationValues >= self.bins[ind-1])
-                elif ind == len(self.bins) -1:
-                    tempbool = self.populationValues >= self.binds[ind-1]
                 if np.any(tempbool):
                     blbSubset.append(copy(self.blobSet))
                     blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
