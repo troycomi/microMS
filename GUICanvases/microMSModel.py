@@ -508,10 +508,11 @@ class MicroMSModel(object):
         #draw region of interest
         ptches.extend(self.getROIPatches())
 
-        #draw histogram labels
+        #draw histogram blobs
         if self.histogramBlobs is not None and len(self.histogramBlobs) != 0:
             for blbs in self.histogramBlobs:
                 ptches.extend(blbs.getPatches(limitDraw, self.slide))
+
         #draw blobs
         else:
             #draw all blob lists with their own color
@@ -713,9 +714,14 @@ class MicroMSModel(object):
             return "No slide loaded"
         
         globalPnt = self.slide.getGlobalPoint(localPoint)
-        if self.blobCollection[self.currentBlobs].blobRequest(globalPnt, radius) == True:
+        added, removeInd = self.blobCollection[self.currentBlobs].blobRequest(globalPnt, radius)
+        if added == True:
+            if self.GUI is not None and self.GUI.showHist:
+                self.GUI.toggleHistWindow()
             return "Adding blob at {}, {}".format(globalPnt[0], globalPnt[1])
         else:
+            if self.GUI is not None and self.GUI.showHist:
+                self.GUI.histCanvas.removeBlob(removeInd)
             return "Removed blob at {}, {}".format(globalPnt[0], globalPnt[1])
 
     def requestInstrumentMove(self, localPoint):

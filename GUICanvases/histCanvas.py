@@ -30,6 +30,8 @@ class HistCanvas(MplCanvas):
         self.blobSet = None
         #the image of the collection from slideWrapper to analyze
         self.imgInd = 1
+        #toggle to move the slide position to the first single cell
+        self.moveSlide = False
         
         #listeners for mouse interaction
         self.mpl_connect('button_release_event', self.mouseUp)
@@ -86,6 +88,36 @@ class HistCanvas(MplCanvas):
             #the actual blob list
             self.blobSet = None
 
+    def removeBlob(self, index):
+        #return immediately if globalBlbs is not set
+        if self.populationValues is None or self.populationValues.size < index:
+            return
+
+        self.populationValues = np.delete(self.populationValues, index)
+        self._calculateHist(resetVars = False)
+
+    def _calculateHist(self, resetVars = True):
+        #return immediately if globalBlbs is not set
+        if self.populationValues is None:
+            return
+
+        #metric >= 3 -> look at morphology
+        if self.populationMetric >= 3:
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100) 
+
+        #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
+        else:
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins=100, range=(0,255))
+
+        self.bins = self.bins[1:]
+
+        #reset limits and redraw
+        if resetVars == True:
+            self.resetVariables()  
+        self.update_figure()
+
+
+
     def calculateHist(self):
         '''
         calculate the population values with either the current set of blobs from the model
@@ -102,28 +134,20 @@ class HistCanvas(MplCanvas):
         #metric == 3 -> look at the area (= pi * r^2)
         if self.populationMetric == 3:
             self.populationValues = np.array([x.radius*x.radius*3.14 for x in self.blobSet.blobs])
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
 
         #metric == 4 -> look at circularity
         elif self.populationMetric == 4:
             self.populationValues = np.array([x.circularity for x in self.blobSet.blobs])
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
-
+            
         #metric == 5 -> look at minimum distance between samples
         elif self.populationMetric == 5:
             self.populationValues = np.array(self.blobSet.minimumDistances())
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
-
+            
         #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
         else:
             self.populationValues = np.array(self.model.slide.getFluorInt(self.blobSet.blobs, self.populationMetric, self.imgInd, self.offset, self.reduceMax))
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins=100, range=(0,255),facecolor = GUIConstants.BAR_COLORS[self.populationMetric])
-
-        self.bins = self.bins[1:]
-
-        #reset limits and redraw
-        self.resetVariables()  
-        self.update_figure()
+            
+        self._calculateHist()
     
     def mouseUp(self,event):
         '''
@@ -155,6 +179,7 @@ class HistCanvas(MplCanvas):
         if event.button == 2:
             self.singleBar = event.xdata
             self.master.reportFromModel('Clicked on {:.1f}'.format(event.xdata))
+            self.moveSlide = True
         
         #RMB to set high values
         if event.button == 3:
@@ -422,18 +447,26 @@ class HistCanvas(MplCanvas):
             if self.singleBar is not None:
                 temp = self.bins - self.singleBar
                 ind = int(np.sum(temp < 0))
-                ind = 1 if ind < 1 else len(self.bins)-1 if ind > len(self.bins) else ind
+                ind = 0 if ind < 0 else len(self.bins)-1 if ind >= len(self.bins) else ind
                 #draw the single bar
                 self.axes.bar(self.bins[ind], self.counts[ind], 
                               width = self.bins[0]-self.bins[1], color = GUIConstants.SINGLE_BAR)
                 #add the single bar blobs to the subset for slideCanvas
-                if np.any((self.populationValues < self.bins[ind]) & (self.populationValues >= self.bins[ind-1])):
+                tempbool = (self.populationValues < self.bins[ind])
+                if ind == len(self.bins) -1:
+                    tempbool = self.populationValues >= self.bins[ind-1]
+                elif ind != 0:
+                    tempbool = tempbool & (self.populationValues >= self.bins[ind-1])
+                if np.any(tempbool):
                     blbSubset.append(copy(self.blobSet))
-                    blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where((self.populationValues < self.bins[ind]) 
-                                                                       & (self.populationValues >= self.bins[ind-1]))[0]]
+                    blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
                     blbSubset[-1].color = GUIConstants.SINGLE_BAR
                     blbSubset[-1].description = 'single'
                     blbSubset[-1].threshCutoff = int(self.bins[ind])
+                    if self.moveSlide == True:
+                        firstBlob = blbSubset[-1].blobs[0]
+                        self.model.slide.pos = [firstBlob.X, firstBlob.Y]
+                        self.moveSlide = False
 
             #draw lines displaying the values used for filtering
             #a single blob to highlight

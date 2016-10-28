@@ -127,10 +127,10 @@ class blobList(object):
             if (globalPoint[0]-b.X)**2 + (globalPoint[1]-b.Y)**2 <= \
                 b.radius**2:
                 self.blobs.pop(i)
-                return False
+                return False, i
 
         self.blobs.append(blob.blob(globalPoint[0], globalPoint[1], radius))
-        return True
+        return True, -1
 
 
     def blobSlide(self):
