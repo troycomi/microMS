@@ -86,6 +86,36 @@ class HistCanvas(MplCanvas):
             #the actual blob list
             self.blobSet = None
 
+    def removeBlob(self, index):
+        #return immediately if globalBlbs is not set
+        if self.populationValues is None or self.populationValues.size < index:
+            return
+
+        self.populationValues = np.delete(self.populationValues, index)
+        self._calculateHist(resetVars = False)
+
+    def _calculateHist(self, resetVars = True):
+        #return immediately if globalBlbs is not set
+        if self.populationValues is None:
+            return
+
+        #metric >= 3 -> look at morphology
+        if self.populationMetric >= 3:
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100) 
+
+        #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
+        else:
+            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins=100, range=(0,255))
+
+        self.bins = self.bins[1:]
+
+        #reset limits and redraw
+        if resetVars == True:
+            self.resetVariables()  
+        self.update_figure()
+
+
+
     def calculateHist(self):
         '''
         calculate the population values with either the current set of blobs from the model
@@ -102,28 +132,20 @@ class HistCanvas(MplCanvas):
         #metric == 3 -> look at the area (= pi * r^2)
         if self.populationMetric == 3:
             self.populationValues = np.array([x.radius*x.radius*3.14 for x in self.blobSet.blobs])
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
 
         #metric == 4 -> look at circularity
         elif self.populationMetric == 4:
             self.populationValues = np.array([x.circularity for x in self.blobSet.blobs])
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
-
+            
         #metric == 5 -> look at minimum distance between samples
         elif self.populationMetric == 5:
             self.populationValues = np.array(self.blobSet.minimumDistances())
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins = 100, facecolor = GUIConstants.BAR_COLORS[self.populationMetric]) 
-
+            
         #metric == [0, 1, 2] -> look at intensities of [r, g, b] channel of image at imgInd
         else:
             self.populationValues = np.array(self.model.slide.getFluorInt(self.blobSet.blobs, self.populationMetric, self.imgInd, self.offset, self.reduceMax))
-            self.counts, self.bins, patches = self.axes.hist(self.populationValues, bins=100, range=(0,255),facecolor = GUIConstants.BAR_COLORS[self.populationMetric])
-
-        self.bins = self.bins[1:]
-
-        #reset limits and redraw
-        self.resetVariables()  
-        self.update_figure()
+            
+        self._calculateHist()
     
     def mouseUp(self,event):
         '''

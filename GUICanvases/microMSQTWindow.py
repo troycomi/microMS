@@ -144,7 +144,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.tools_menu.addAction(self.limitDraw)
         self.tools_menu.addSeparator()
         #Histogram options
-        self.tools_menu.addAction('Histogram Window',self.showHistWindow,
+        self.tools_menu.addAction('Histogram Window',self.toggleHistWindow,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_F)
         self.tools_menu.addAction('Histogram Options',self.histOptions)
         self.tools_menu.addAction('Pick Extremes',self.histSelect)
@@ -516,7 +516,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             )
             self.slideCanvas.draw()   
 
-            self.histCanvas.clearFilt()
+            if self.showHist == True:
+                self.toggleHistWindow()
                 
     def loadInstrumentPositions(self, extras = None):        
         '''
@@ -535,6 +536,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 self.model.loadInstrumentPositions(fileName)
                 )
             self.slideCanvas.draw()
+
+            if self.showHist == True:
+                self.toggleHistWindow()
             
     def fileQuit(self):
         '''
@@ -563,6 +567,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.saveAll(extras)
         self.slideCanvas.draw()
         
+        if self.showHist == True:
+            self.histCanvas.calculateHist()
+        
     def blbPopup(self):
         '''
         popup the blob finding parameters
@@ -572,7 +579,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.popups['blobFind'].show()
             self.popups['blobFind'].activateWindow()
 
-    def showHistWindow(self):   
+    def toggleHistWindow(self):   
         '''
         toggles the display of the histogram canvas and initializes the instance
         '''
@@ -583,6 +590,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         else:
             self.histCanvas.hide()
             self.histCanvas.clearFilt()
+            if self.popups['histOpts'].isVisible():
+                self.popups['histOpts'].hide()
             
     def histOptions(self):
         '''
@@ -733,6 +742,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
             self.model.rectPackBlobs(sep, layers, dynamicLayering)
             self.slideCanvas.draw()
+            if self.showHist:
+                self.toggleHistWindow()
 
     def hexPack(self, extras = None):
         '''
@@ -769,6 +780,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
             self.model.hexPackBlobs(sep, layers, dynamicLayering)
             self.slideCanvas.draw()
+            if self.showHist:
+                self.toggleHistWindow()
 
     def circPack(self, extras = None):
         '''
@@ -800,8 +813,10 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 shots = extras.shots
                 offset = extras.offset
 
-        self.model.circularPackBlobs(sep, shots, offset)
-        self.slideCanvas.draw()
+            self.model.circularPackBlobs(sep, shots, offset)
+            self.slideCanvas.draw()
+            if self.showHist:
+                self.toggleHistWindow()
         
     def gridPopup(self):
         '''
