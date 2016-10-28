@@ -574,8 +574,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         '''
         popup the blob finding parameters
         '''
-        if self.model.blobFinder is not None:
-            self.popups['blobFind'].loadParams(self.model.blobFinder)
+        blbFind = self.model.blobCollection[self.model.currentBlobs].blobFinder
+        if blbFind is not None:
+            self.popups['blobFind'].loadParams(blbFind)
             self.popups['blobFind'].show()
             self.popups['blobFind'].activateWindow()
 
