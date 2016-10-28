@@ -301,6 +301,7 @@ class SlideWrapper(object):
             if self.displaySlides[i] == True:
                 ind = i+1
                 break
+        ind %= len(self.slides)
             
         self.switchToChannel(ind)
         

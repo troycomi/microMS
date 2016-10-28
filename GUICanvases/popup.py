@@ -230,7 +230,8 @@ class histPopupWindow(QtGui.QDialog):
 
         self.hist.populationMetric = int(self.channel.currentIndex())
 
-        self.master.model.slide.switchToChannel(self.hist.imgInd)
+        if self.master is not None and self.master.model.slide is not None:
+            self.master.model.slide.switchToChannel(self.hist.imgInd)
 
         self.hist.reduceMax = self.max.isChecked()
         self.hist.calculateHist()
