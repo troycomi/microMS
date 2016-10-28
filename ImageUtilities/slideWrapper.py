@@ -309,17 +309,19 @@ class SlideWrapper(object):
         Turn the target image channel on and the rest off    
         ind: image channel to activate.  Performs index out of bounds checks
         '''
-        ind = 0 if ind < 0 else ind % len(self.slides)    
         self.displaySlides = [False]*len(self.slides)
-        self.displaySlides[ind] = True
+        if ind < len(self.slides):
+            ind = 0 if ind < 0 else ind
+            self.displaySlides[ind] = True
         
     def toggleChannel(self,ind):
         '''
         Toggle the supplied image channel on or off
         ind: the image channel to toggle
         '''
-        ind = 0 if ind < 0 else ind % len(self.slides)
-        self.displaySlides[ind] = not self.displaySlides[ind]
+        ind = 0 if ind < 0 else ind
+        if ind < len(self.slides):
+            self.displaySlides[ind] = not self.displaySlides[ind]
         
     def setBrightfield(self,ind):
         '''
