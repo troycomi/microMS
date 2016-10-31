@@ -145,7 +145,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.tools_menu.addSeparator()
         #Histogram options
         self.tools_menu.addAction('Histogram Window',self.toggleHistWindow,
-                                  QtCore.Qt.CTRL + QtCore.Qt.Key_F)
+                                  QtCore.Qt.CTRL + QtCore.Qt.Key_H)
         self.tools_menu.addAction('Histogram Options',self.histOptions)
         self.tools_menu.addAction('Pick Extremes',self.histSelect)
         self.tools_menu.addAction('Apply Filter',self.histFilter,
@@ -170,6 +170,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.inst_menu = QtGui.QMenu('Device', self)
         self.inst_menu.addAction('Establish Connection', self.initializeInstrument)
         self.inst_menu.addAction('Set Dwell Time', self.setDwell)
+        self.inst_menu.addAction('Set Wash Time', self.setWash)
         self.inst_menu.addAction('Analyze All', self.analyzeAll)
 
         self.menuBar().addSeparator()
@@ -863,6 +864,24 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 self.model.coordinateMapper.connectedInstrument.dwellTime = float(text)
             except:
                 self.statusBar().showMessage('Input error')    
+
+    def setWash(self, extras = None):
+        '''
+        Set the dwell time for analysis with a connected instrument
+        '''
+        if extras is None or not hasattr(extras, 'text'):
+            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  
+                                                 "Set wash time (s), -1 for continuous"
+                                                 )   
+        else:
+            text = extras.text
+            ok = extras.ok    
+
+        if ok:
+            try:
+                self.model.coordinateMapper.connectedInstrument.postAcqusitionWait = float(text)
+            except:
+                self.statusBar().showMessage('Input error')    
     
     def analyzeAll(self):
         '''
@@ -1049,7 +1068,16 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
                 #home all positions
                 elif event.key() == QtCore.Qt.Key_H:
-                    mapper.connectedInstrument.homeAll()
+                    if event.modifiers() & QtCore.Qt.ShiftModifier:
+                        mapper.connectedInstrument.finalPosition()
+                    else:
+                        mapper.connectedInstrument.homeAll()
+
+                elif event.key() == QtCore.Qt.Key_F and \
+                    event.modifiers() & QtCore.Qt.ControlModifier:
+                    x,y = mapper.connectedInstrument.getPositionXY()
+                    z = mapper.connectedInstrument.getProbePosition()
+                    self.statusBar().showMessage('Stage at ({}, {}); probe at {}'.format(x,y,z))
 
             self.slideCanvas.draw()
         else:
