@@ -18,7 +18,8 @@ ROI                     =   'yellow'
 ROI_DIST                =   10 #pixels
 #colors of blob list
 MULTI_BLOB              =   ['lime', 'salmon', 'skyBlue', 'orangeRed', 
-                             'plum', 'hotPink', 'aqua', 'yellow', 'olive']
+                             'plum', 'hotPink', 'aqua', 'yellow', 'olive',
+                             'green']
 #text display of grouped targets from expanding blobs
 EXPANDED_TEXT          =   'purple'
 #default blob radius in pixels

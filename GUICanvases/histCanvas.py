@@ -304,18 +304,20 @@ class HistCanvas(MplCanvas):
 
     def getFilteredBlobs(self):
         '''
-        Get the set of blobs which pass the current filter
-        Must only have one (high or low) filter else None is returned
+        Get the set of blobs which pass the current filters
+        returns list of blobLists with the filters already set
         '''
-        lowblbs = []
-        highblbs = []
+        result = []
         #low intensity
         if self.lowIntens is not None:
             if self.lowLimit is not None:
                 tempbool = (self.populationValues < self.lowIntens) & (self.populationValues > self.lowLimit)
             else:
                 tempbool = self.populationValues < self.lowIntens
+
             lowblbs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
+            result.append(self.blobSet.partialDeepCopy(lowblbs))
+            result[-1].filters.append(self._getFilterDescription(self.lowLimit, self.lowIntens))
                 
         #high intensity
         if self.highIntens is not None:
@@ -325,47 +327,29 @@ class HistCanvas(MplCanvas):
                 tempbool = self.populationValues >  self.highIntens
                 
             highblbs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
+            result.append(self.blobSet.partialDeepCopy(highblbs))
+            result[-1].filters.append(self._getFilterDescription(self.highIntens, self.highLimit))
 
-        #return None if both blobs are present
-        if len(lowblbs) > 0 and len(highblbs) > 0:
-            return None
+        return result
 
-        #return one or the other
-        if len(lowblbs) > 0:
-            result = copy(self.blobSet)
-            result.blobs = lowblbs
-            return result
-        if len(highblbs) > 0:
-            result = copy(self.blobSet)
-            result.blobs = highblbs
-            return result
-
-        #no cells in filter
-        return None
-
-    def getFilterDescription(self):
+    def _getFilterDescription(self, lowVal, highVal):
         '''
         returns a succienct string description of the current filter set
+        lowVal: low value, part of # < channel < #
+        highVal: high value, other part of # < channel < #
         '''
         result = ''
-        if self.lowIntens is not None and self.highIntens is not None:
+        if lowVal is None and highVal is None:
             return None
 
         channel = 'c{}[{}]'.format(self.imgInd, self.metrics[self.populationMetric])
 
-        if self.lowIntens is not None:
-            if self.lowLimit is not None:
-                result += ("{:.1f}<".format(self.lowLimit))
-            result += '{}<{:.1f};'.format(channel, self.lowIntens)
-
-        elif self.highIntens is not None:
-            result += '{:.1f}<{}'.format(self.highIntens, channel)
-            if self.highLimit is not None:
-                result += '<{:.1f}'.format(self.highLimit)
-            result += ';'
-
-        else:
-            return None
+        if lowVal is not None:
+            result += "{:.1f}<".format(lowVal)
+        result += channel
+        if highVal is not None:
+            result += "<{:.1f}".format(highVal)
+        result += ';'
 
         result += 'max' if self.reduceMax else 'mean'
         result += ';offset={}'.format(self.offset)

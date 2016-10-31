@@ -47,7 +47,7 @@ class flexImagingSolarix(solarixMapper):
         output.close()
 
     def saveInstrumentRegFile(self, filename):
-        blobs = [blob.blob(p[0], p[1]) for p in self.pixelPoints]
+        blobs = [blob(p[0], p[1]) for p in self.pixelPoints]
         if blobs is None or len(blobs) == 0:
             return
         output = open(filename, 'w')

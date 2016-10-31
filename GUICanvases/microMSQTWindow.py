@@ -664,16 +664,14 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         the filter is also recorded for writing the cell find file
         '''
         filt = self.histCanvas.getFilteredBlobs()
-               
-        if filt is not None:
-            message = self.histCanvas.getFilterDescription()
-            self.model.updateCurrentBlobs(filt)
-            self.model.blobCollection[self.model.currentBlobs].filters.append(message)
-            self.statusBar().showMessage(message)
+        if len(filt) == 0:
+            self.statusBar().showMessage('Invalid histogram filter')
+        else:
+            for blbs in filt:
+                self.model.updateCurrentBlobs(blbs)
+            self.statusBar().showMessage('Applied {} filters'.format(len(filt)))
             self.histCanvas.calculateHist()
             self.slideCanvas.draw()
-        else:
-            self.statusBar().showMessage('Invalid histogram filter')
 
     def distanceFilter(self, extras = None):
         '''
