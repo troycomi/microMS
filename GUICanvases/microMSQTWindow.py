@@ -998,7 +998,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 
             keys = [QtCore.Qt.Key_1, QtCore.Qt.Key_2, QtCore.Qt.Key_3, 
                     QtCore.Qt.Key_4, QtCore.Qt.Key_5, QtCore.Qt.Key_6, 
-                    QtCore.Qt.Key_7, QtCore.Qt.Key_8, QtCore.Qt.Key_9]
+                    QtCore.Qt.Key_7, QtCore.Qt.Key_8, QtCore.Qt.Key_9,
+                    QtCore.Qt.Key_0]
                 
             #for each numeric key    
             for i,k in enumerate(keys):

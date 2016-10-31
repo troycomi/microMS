@@ -50,7 +50,7 @@ class MicroMSModel(object):
         '''
         Clears and initializes all instance variables
         '''
-        self.blobCollection = [blobList.blobList(self.slide) for i in range(9)]
+        self.blobCollection = [blobList.blobList(self.slide) for i in range(10)]
 
         self.currentBlobs = 0
         self.tempBlobs = None
