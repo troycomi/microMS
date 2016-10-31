@@ -62,7 +62,6 @@ class blobList(object):
     def partialDeepCopy(self, newBlobs):
         cls = self.__class__
         result = cls.__new__(cls)
-        memo[id(self)] = result
 
         result.blobs = newBlobs
         result.generateGroupLabels()
@@ -213,13 +212,13 @@ class blobList(object):
 
     def roiFilter(self):
         if len(self.ROI) < 3:
-            return
+            return deepcopy(self)
         roi = Path(self.ROI)
         points = np.array([ (b.X,b.Y) for b in self.blobs])
         if points.size == 0:
-            self.blobs = []
-            return
-        self.blobs = [self.blobs[i] for i in np.argwhere(roi.contains_points(points))]
+            return self.partialDeepCopy([])
+        result = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(roi.contains_points(points))])
+        return result
 
     def distanceFilter(self, dist, subblocks = None, verbose = False):
         '''
@@ -269,8 +268,9 @@ class blobList(object):
         #report to console
         if verbose: print("Done! {} cells within {} pixels, {} remaining".format(count, dist, len(result) - count))
         
-        self.blobs = [self.blobs[i] for i in np.argwhere(~np.array(result))]
-        self.filters.append("distance > {}".format(dist))
+        newList = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(~np.array(result))])
+        newList.filters.append("distance > {}".format(dist))
+        return newList
 
     
     @staticmethod    
@@ -463,9 +463,10 @@ class blobList(object):
                 result.append(blob.blob(x = e[0],y = e[1], radius = r, circularity = c, group = ind))
             #increment group number for next blob
             ind += 1
-                        
-        self.blobs = result
-        self.generateGroupLabels()
+                   
+        result = self.partialDeepCopy(result)     
+        result.generateGroupLabels()
+        return result
     
     def rectangularlyPackPoints(self, spacing, numLayers, 
                                    r = GUIConstants.DEFAULT_PATTERN_RADIUS, c = 1,
@@ -531,8 +532,9 @@ class blobList(object):
                 result.append(b)
             ind += 1
 
-        self.blobs = result
-        self.generateGroupLabels()
+        result = self.partialDeepCopy(result)
+        result.generateGroupLabels()
+        return result
     
     def hexagonallyClosePackPoints(self, spacing, numLayers, 
                                    r = GUIConstants.DEFAULT_PATTERN_RADIUS, c = 1,
@@ -595,8 +597,9 @@ class blobList(object):
                 result.append(b)
             ind += 1
         
-        self.blobs = result
-        self.generateGroupLabels()
+        result = self.partialDeepCopy(result)
+        result.generateGroupLabels()
+        return result
 
     def generateGroupLabels(self):
         '''
