@@ -29,6 +29,13 @@ class flexImagingSolarix(solarixMapper):
             return
         output = open(filename, 'w')
         output.write('# X-pos Y-pos spot-name region\n')
+        #write out the fiducial locations for registration
+        for i in range(len(self.physPoints)):
+            phys = self.physPoints[i]
+            pix = self.pixelPoints[i]
+            output.write('{0:.0f} {1:.0f} fiducial{2} 01\n'
+                            .format(phys[0], -phys[1], i))
+
         for b in blobs:
             phys = self.translate((b.X, b.Y))
             if b.group is not None:
@@ -36,7 +43,24 @@ class flexImagingSolarix(solarixMapper):
                              .format(phys[0], -phys[1], b.X, b.Y, b.group))
             else:
                 output.write('{0:.0f} {1:.0f} x{2:.0f}_y{3:.0f} 01\n'.format(phys[0], -phys[1], b.X, b.Y))
+
         output.close()
+
+    def saveInstrumentRegFile(self, filename):
+        blobs = [blob.blob(p[0], p[1]) for p in self.pixelPoints]
+        if blobs is None or len(blobs) == 0:
+            return
+        output = open(filename, 'w')
+        output.write('# X-pos Y-pos spot-name region\n')
+
+        for b in blobs:
+            phys = self.translate((b.X, b.Y))
+            if b.group is not None:
+                output.write('{0:.0f} {1:.0f} s{4}_x{2:.0f}_y{3:.0f} 01\n'
+                             .format(phys[0], -phys[1], b.X, b.Y, b.group))
+            else:
+                output.write('{0:.0f} {1:.0f} x{2:.0f}_y{3:.0f} 01\n'.format(phys[0], -phys[1], b.X, b.Y))
+
 
     def loadInstrumentFile(self, filename):
         '''
@@ -51,6 +75,6 @@ class flexImagingSolarix(solarixMapper):
             toks = toks[2].split('_')
             if len(toks) == 3:
                 result.append(blob(int(toks[1][1:]), int(toks[2][1:]), group = int(toks[0][1:])))
-            else:
+            elif len(toks) == 2:
                 result.append(blob(int(toks[0][1:]), int(toks[1][1:])))
         return result
