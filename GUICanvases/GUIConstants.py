@@ -18,7 +18,8 @@ ROI                     =   'yellow'
 ROI_DIST                =   10 #pixels
 #colors of blob list
 MULTI_BLOB              =   ['lime', 'salmon', 'skyBlue', 'orangeRed', 
-                             'plum', 'hotPink', 'aqua', 'yellow', 'olive']
+                             'plum', 'hotPink', 'aqua', 'yellow', 'olive',
+                             'green']
 #text display of grouped targets from expanding blobs
 EXPANDED_TEXT          =   'purple'
 #default blob radius in pixels
@@ -70,7 +71,7 @@ IMAGE_HOTKEYS           =   ("w,s,a,d\t\tMove\n"
         "o\t\tToggle drawn shapes\n"
         "O\t\tToggle drawing all cell lists\n"
         "Ctrl + C\tClear all found cells\n"
-        "C\tClear current cell list\n"
+        "C\t\tClear current cell list\n"
         "c\t\tClear ROI\n\n"
         "#\t\tToggle channel\n"
         "Ctrl+#\t\tSet channel\n"
@@ -85,7 +86,7 @@ IMAGE_HOTKEYS           =   ("w,s,a,d\t\tMove\n"
         )
 
 INSTRUMENT_HOTKEYS      =   ("i,k,j,l\t\tMove\n"
-        "ctrl + I,K,J,L\tMove Far\n"
+        "Ctrl + I,K,J,L\tMove Far\n"
         "I,K,J,L\t\tMove Farther\n"
         "+,-\t\tMove probe up/down\n"
         "V\t\tSet probe position\n"
