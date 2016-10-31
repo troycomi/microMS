@@ -189,15 +189,22 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         positions: a list of (x,y) coordinates in motor positions
         '''
         #do nothing if not connected
-        if not self.connected:
+        if not self.connected or self.bottomPosition == 0:
             return
         #start by homing all
         self.homeAll()
         #collected from each position
         for p in positions:
             self._collect(p)
-        #finish homing all
-        self.homeAll()
+        #if self.postAcqusitionWait is not 0, have to move to final position
+        if self.postAcqusitionWait != 0:
+            self.finalPosition()
+            if self.postAcqusitionWait != -1:
+                time.sleep(self.postAcqusitionWait)
+                self.homeAll()
+        else:
+            #finish homing all
+            self.homeAll()
 
     def moveProbe(self, direction, stepSize):
         '''
@@ -234,6 +241,11 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #automatically retract
         self.toggleProbe()
 
+    def getProbePosition(self):
+        if not self.connected:
+            return None
+        return self.getPosition(self.zdev)
+
     def toggleProbe(self):
         '''
         toggle the current probe position.  If at bottom, raise, else lower
@@ -241,7 +253,7 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         if self.bottomPosition == 0 or not self.connected:
             return
         if self.atBottom:
-            pos = self.bottomPosition - self.smallZstep * self.largeFactor
+            pos = self.bottomPosition - self.smallZstep * self.largeFactor*5
             pos = 0 if pos < 0 else pos
         else:
             pos = self.bottomPosition
@@ -250,3 +262,14 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         self._receive()
         self.atBottom = not self.atBottom
         
+    def finalPosition(self):
+        '''
+        Move the probe to the washing position, which is 10000 above the slide position
+        '''
+        if self.bottomPosition == 0 or not self.connected:
+            return
+        self.homeAll()
+        pos = self.bottomPosition - 10000#NOTE CONSTANT VALUE
+        
+        self._send(self.zdev, self.COMMANDS['MOVE_ABS'], pos)
+        self._receive()

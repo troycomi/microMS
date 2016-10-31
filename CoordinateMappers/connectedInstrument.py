@@ -11,6 +11,7 @@ class ConnectedInstrument(object, metaclass=abc.ABCMeta):
         Create a new connected instrument, with some important constants
         '''
         self.dwellTime = 1#seconds
+        self.postAcqusitionWait = 0#seconds
         self.connected = False#has a connection been established
         super().__init__()
 
@@ -53,6 +54,12 @@ class ConnectedInstrument(object, metaclass=abc.ABCMeta):
         '''
 
     @abc.abstractmethod
+    def getProbePosition(self):
+        '''
+        Get the current position of the probe for queries on probe position
+        '''
+
+    @abc.abstractmethod
     def collect(self):
         '''
         Perform a single collection at the current position for self.dwellTime (in seconds)
@@ -62,6 +69,8 @@ class ConnectedInstrument(object, metaclass=abc.ABCMeta):
     def collectAll(self, positions):
         '''
         Perform sequential collections at each point specified.
+        After collection, the probe should return to self.finalPosition() for
+        self.postAcqusitionWait seconds. if postAcqusitionWait == -1 stay at finalPosition.
         positions: list of (x,y) tuples
         '''
         
@@ -70,4 +79,10 @@ class ConnectedInstrument(object, metaclass=abc.ABCMeta):
         '''
         Begin connection with an instrument.
         portname: port to connect two
+        '''
+
+    @abc.abstractmethod
+    def finalPosition(self):
+        '''
+        Move the probe to the final "resting" position
         '''

@@ -84,11 +84,13 @@ IMAGE_HOTKEYS           =   ("w,s,a,d\t\tMove\n"
         )
 
 INSTRUMENT_HOTKEYS      =   ("i,k,j,l\t\tMove\n"
+        "ctrl + I,K,J,L\tMove Far\n"
         "I,K,J,L\t\tMove Farther\n"
         "+,-\t\tMove probe up/down\n"
         "V\t\tSet probe position\n"
         "v\t\tToggle probe position\n"
         "h\t\tHome stage\n"
+        "H\t\tFinal position\n"
         "x\t\tSingle analysis\n\n"
         "LMB+Alt\tMove to spot\n"
         "RMB\t\tAdd coordinate\n"
