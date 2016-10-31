@@ -23,7 +23,6 @@ class blobList(object):
         self.blobs = []
         self.blobFinder = blobFinder.blobFinder(slide)
         self.filters = []
-        self.color = GUIConstants.MULTI_BLOB[0]
         self.description = None
         self.threshCutoff = None
         self.ROI = []
@@ -47,20 +46,35 @@ class blobList(object):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        #for k, v in self.__dict__.items():
-        #    setattr(result, k, deepcopy(v, memo))
+
         result.blobs = deepcopy(self.blobs)
         result.filters = deepcopy(self.filters)
         result.description = deepcopy(self.description)
         result.ROI = deepcopy(self.ROI)
         result.threshCutoff = self.threshCutoff
-        result.color = self.color
         result.groupLabels = deepcopy(self.groupLabels)
 
         result.blobFinder = blobFinder.blobFinder(self.blobFinder.slide)
         result.blobFinder.copyParameters(self.blobFinder)
 
         return result
+
+    def partialDeepCopy(self, newBlobs):
+        cls = self.__class__
+        result = cls.__new__(cls)
+
+        result.blobs = newBlobs
+        result.generateGroupLabels()
+        result.filters = deepcopy(self.filters)
+        result.description = deepcopy(self.description)
+        result.ROI = deepcopy(self.ROI)
+        result.threshCutoff = self.threshCutoff
+
+        result.blobFinder = blobFinder.blobFinder(self.blobFinder.slide)
+        result.blobFinder.copyParameters(self.blobFinder)
+
+        return result
+
 
     def saveBlobs(self, filename):
         '''
@@ -198,13 +212,13 @@ class blobList(object):
 
     def roiFilter(self):
         if len(self.ROI) < 3:
-            return
+            return deepcopy(self)
         roi = Path(self.ROI)
         points = np.array([ (b.X,b.Y) for b in self.blobs])
         if points.size == 0:
-            self.blobs = []
-            return
-        self.blobs = [self.blobs[i] for i in np.argwhere(roi.contains_points(points))]
+            return self.partialDeepCopy([])
+        result = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(roi.contains_points(points))])
+        return result
 
     def distanceFilter(self, dist, subblocks = None, verbose = False):
         '''
@@ -254,8 +268,9 @@ class blobList(object):
         #report to console
         if verbose: print("Done! {} cells within {} pixels, {} remaining".format(count, dist, len(result) - count))
         
-        self.blobs = [self.blobs[i] for i in np.argwhere(~np.array(result))]
-        self.filters.append("distance > {}".format(dist))
+        newList = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(~np.array(result))])
+        newList.filters.append("distance > {}".format(dist))
+        return newList
 
     
     @staticmethod    
@@ -448,9 +463,10 @@ class blobList(object):
                 result.append(blob.blob(x = e[0],y = e[1], radius = r, circularity = c, group = ind))
             #increment group number for next blob
             ind += 1
-                        
-        self.blobs = result
-        self.generateGroupLabels()
+                   
+        result = self.partialDeepCopy(result)     
+        result.generateGroupLabels()
+        return result
     
     def rectangularlyPackPoints(self, spacing, numLayers, 
                                    r = GUIConstants.DEFAULT_PATTERN_RADIUS, c = 1,
@@ -516,8 +532,9 @@ class blobList(object):
                 result.append(b)
             ind += 1
 
-        self.blobs = result
-        self.generateGroupLabels()
+        result = self.partialDeepCopy(result)
+        result.generateGroupLabels()
+        return result
     
     def hexagonallyClosePackPoints(self, spacing, numLayers, 
                                    r = GUIConstants.DEFAULT_PATTERN_RADIUS, c = 1,
@@ -580,8 +597,9 @@ class blobList(object):
                 result.append(b)
             ind += 1
         
-        self.blobs = result
-        self.generateGroupLabels()
+        result = self.partialDeepCopy(result)
+        result.generateGroupLabels()
+        return result
 
     def generateGroupLabels(self):
         '''
@@ -601,7 +619,7 @@ class blobList(object):
                     self.groupLabels[b.group] = (max(b.X, p[0]), min(b.Y, p[1]))
 
 
-    def getPatches(self, limitDraw, slideWrapper):
+    def getPatches(self, limitDraw, slideWrapper, blobColor):
 
         todraw = slideWrapper.getBlobsInBounds(self.blobs)
 
@@ -611,6 +629,6 @@ class blobList(object):
                                                len(todraw)//GUIConstants.DRAW_LIMIT)]
 
         return list(map(lambda el: plt.Circle((el[0],el[1]), el[2],
-                                             color = self.color,
+                                             color = blobColor,
                                              linewidth = 1,
                                              fill = False), todraw))

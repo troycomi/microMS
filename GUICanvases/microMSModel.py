@@ -50,16 +50,13 @@ class MicroMSModel(object):
         '''
         Clears and initializes all instance variables
         '''
-        self.blobCollection = [blobList.blobList(self.slide) for i in range(9)]
-        for i in range(len(self.blobCollection)):
-            self.blobCollection[i].color = GUIConstants.MULTI_BLOB[i]
+        self.blobCollection = [blobList.blobList(self.slide) for i in range(10)]
 
         self.currentBlobs = 0
         self.tempBlobs = None
         self.histogramBlobs = None
-        self.filters = []
+        self.histColors = None
         self.coordinateMapper.clearPoints()
-        self.savedBlobs = None
         self.mirrorImage = False
         self.showPatches = True
         self.drawAllBlobs = False
@@ -290,29 +287,25 @@ class MicroMSModel(object):
     def updateCurrentBlobs(self, newBlobs):
         if not isinstance(newBlobs, blobList.blobList):
             raise ValueError('New blobs must be a blobList')
-        self.savedBlobs, self.blobCollection[self.currentBlobs] = \
-            self.blobCollection[self.currentBlobs], newBlobs
+        
         #find first unused blob index
-        for i, blbs in enumerate(self.blobCollection):
-            if blbs.length() == 0:
-                self.blobCollection[i] = self.savedBlobs
-                return i
-
-    def restoreSavedBlobs(self):
-        if self.savedBlobs is not None:
-            self.savedBlobs, self.blobCollection[self.currentBlobs] = \
-                self.blobCollection[self.currentBlobs], self.savedBlobs
+        for i in range(len(self.blobCollection)):
+            if self.blobCollection[i].length() == 0:
+                #add new blobs
+                self.blobCollection[i] = newBlobs
+                self.currentBlobs = i
+                return
 
     def distanceFilter(self, distance):
         '''
         filters the global blob list to remove blobs which are closer than 'distance' pixels
-        the prior list is stored as savedBlobs
+        the prior list is stored in previous current index
         distance: distance threshold
         '''
         if self.currentBlobLength() == 0:
             return "No blobs to filter"
-        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
-        self.blobCollection[self.currentBlobs].distanceFilter(distance, verbose = True)
+        
+        self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].distanceFilter(distance, verbose = True))
 
         return "Finished distance filter"
 
@@ -321,9 +314,8 @@ class MicroMSModel(object):
             return "No blobs to filter"
         if len(self.blobCollection[self.currentBlobs].ROI) < 3:
             return "No ROI selected"
-        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
         startLen = self.currentBlobLength()
-        self.blobCollection[self.currentBlobs].roiFilter()
+        self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].roiFilter())
         endLen = self.currentBlobLength()
         return "{} cells removed, {} remain".format(startLen - endLen, endLen)
 
@@ -331,37 +323,34 @@ class MicroMSModel(object):
     def hexPackBlobs(self, separation, layers, dynamicLayering = False):
         '''
         expands each blob into hexagonally closest packed positions
-        the prior list is stored as savedBlobs
         sep: minimum separation between points
         layers: number of layers to generate
         dynamicLayering: adjust the number of layers with the blob radius
         '''
-        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
-        self.blobCollection[self.currentBlobs].hexagonallyClosePackPoints(separation, layers, dynamicLayering = dynamicLayering)
+        self.updateCurrentBlobs(self.blobCollection[self.currentBlobs]\
+            .hexagonallyClosePackPoints(separation, layers, dynamicLayering = dynamicLayering))
 
     
     def rectPackBlobs(self, separation, layers, dynamicLayering = False):
         '''
         expands each blob into rectangularly packed positions
-        the prior list is stored as savedBlobs
         sep: minimum separation between points
         layers: number of layers to generate
         dynamicLayering: adjust the number of layers with the blob radius
         '''
-        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
-        self.blobCollection[self.currentBlobs].rectangularlyPackPoints(separation, layers, dynamicLayering = dynamicLayering)
+        self.updateCurrentBlobs(self.blobCollection[self.currentBlobs]\
+            .rectangularlyPackPoints(separation, layers, dynamicLayering = dynamicLayering))
         
     def circularPackBlobs(self, separation, maxShots, offset):
         '''
         expands each blob into circularly packed positions around the blob
-        the prior list is stored as savedBlobs
         sep: minimum separation between spots
         shots: maximum number of spots to place around each blob
         offset: offset from the current circumference, 
         offset > 0 places spots outside the current blob
         '''
-        self.savedBlobs = deepcopy(self.blobCollection[self.currentBlobs])
-        self.blobCollection[self.currentBlobs].circularPackPoints(separation, maxShots, offset, minSpots = 4)
+        self.updateCurrentBlobs(self.blobCollection[self.currentBlobs]\
+            .circularPackPoints(separation, maxShots, offset, minSpots = 4))
 
     def analyzeAll(self):
         '''
@@ -387,9 +376,10 @@ class MicroMSModel(object):
     def setBlobSubset(self, blobSubset):
         '''
         Sets the histogram blobs supplied by a histcanvas
-        blobSubset: an odd object...
+        blobSubset: an odd object, tuple of lists, first is a blobList, second a list of colors
         '''
-        self.histogramBlobs = blobSubset
+        self.histogramBlobs = blobSubset[0]
+        self.histColors = blobSubset[1]
 
     def reportSlideStep(self, direction, stepSize):
         '''
@@ -510,19 +500,20 @@ class MicroMSModel(object):
 
         #draw histogram blobs
         if self.histogramBlobs is not None and len(self.histogramBlobs) != 0:
-            for blbs in self.histogramBlobs:
-                ptches.extend(blbs.getPatches(limitDraw, self.slide))
+            for i, blbs in enumerate(self.histogramBlobs):
+                ptches.extend(blbs.getPatches(limitDraw, self.slide, self.histColors[i]))
 
         #draw blobs
         else:
             #draw all blob lists with their own color
             if self.drawAllBlobs == True:
-                for blobs in self.blobCollection:
-                    ptches.extend(blobs.getPatches(limitDraw, self.slide))
+                for j, blobs in enumerate(self.blobCollection):
+                    ptches.extend(blobs.getPatches(limitDraw, self.slide, GUIConstants.MULTI_BLOB[j]))
 
             #show only the current blob list
             else:
-                ptches.extend(self.blobCollection[self.currentBlobs].getPatches(limitDraw, self.slide))
+                ptches.extend(self.blobCollection[self.currentBlobs].getPatches(limitDraw, self.slide,
+                                                                                GUIConstants.MULTI_BLOB[self.currentBlobs]))
 
         #return list of patches as a patch collection, if none match_original must be false
         return PatchCollection(ptches, match_original=(len(ptches) != 0))

@@ -23,15 +23,6 @@ class blob(object):
             (0 if circularity < 0 else circularity)
         self.group = group
 
-    def shiftCoord(self, xShift, yShift):
-        '''
-        Move the x,y coordinate of the blob by the specified amount
-        xShift: amount to += to x coordinate
-        yShift: amount to += to y coordinate
-        '''
-        self.X += xShift
-        self.Y += yShift
-
     @staticmethod
     def getXYList(blobs):
         '''
