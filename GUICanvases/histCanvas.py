@@ -403,6 +403,7 @@ class HistCanvas(MplCanvas):
                           color = GUIConstants.BAR_COLORS[self.populationMetric])
             self.axes.hold(True)
             blbSubset = []
+            blbColors = []
             #handle low intens
             if self.lowIntens is not None:
                 if self.lowLimit is not None:
@@ -420,9 +421,9 @@ class HistCanvas(MplCanvas):
                 if np.any(tempbool2):
                     blbSubset.append(copy(self.blobSet))
                     blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool2)[0]]
-                    blbSubset[-1].color = GUIConstants.LOW_BAR
                     blbSubset[-1].description = 'low'
                     blbSubset[-1].threshCutoff = int(self.lowIntens)
+                    blbColors.append(GUIConstants.LOW_BAR)
                 
             #handle high intens
             if self.highIntens is not None:
@@ -442,6 +443,7 @@ class HistCanvas(MplCanvas):
                     blbSubset[-1].color = GUIConstants.HIGH_BAR
                     blbSubset[-1].description = 'high'
                     blbSubset[-1].threshCutoff = int(self.highIntens)
+                    blbColors.append(GUIConstants.HIGH_BAR)
 
             #handle single bar selected
             if self.singleBar is not None:
@@ -460,13 +462,14 @@ class HistCanvas(MplCanvas):
                 if np.any(tempbool):
                     blbSubset.append(copy(self.blobSet))
                     blbSubset[-1].blobs = [self.blobSet.blobs[i] for i in np.where(tempbool)[0]]
-                    blbSubset[-1].color = GUIConstants.SINGLE_BAR
                     blbSubset[-1].description = 'single'
                     blbSubset[-1].threshCutoff = int(self.bins[ind])
                     if self.moveSlide == True:
                         firstBlob = blbSubset[-1].blobs[0]
                         self.model.slide.pos = [firstBlob.X, firstBlob.Y]
                         self.moveSlide = False
+                    blbColors.append(GUIConstants.SINGLE_BAR)
+
 
             #draw lines displaying the values used for filtering
             #a single blob to highlight
@@ -487,7 +490,7 @@ class HistCanvas(MplCanvas):
                 self.axes.vlines(self.highIntens, 0, self.axes.get_ylim()[1], colors = GUIConstants.HIGH_BAR, linestyles='dashdot')
 
             #tell slide canvas about the new subset
-            self.master.report_blbsubset(blbSubset)
+            self.master.report_blbsubset((blbSubset, blbColors))
 
         self.axes.hold(False)
         #update the axes labels and x axis limits

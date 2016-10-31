@@ -23,7 +23,6 @@ class blobList(object):
         self.blobs = []
         self.blobFinder = blobFinder.blobFinder(slide)
         self.filters = []
-        self.color = GUIConstants.MULTI_BLOB[0]
         self.description = None
         self.threshCutoff = None
         self.ROI = []
@@ -47,20 +46,36 @@ class blobList(object):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        #for k, v in self.__dict__.items():
-        #    setattr(result, k, deepcopy(v, memo))
+
         result.blobs = deepcopy(self.blobs)
         result.filters = deepcopy(self.filters)
         result.description = deepcopy(self.description)
         result.ROI = deepcopy(self.ROI)
         result.threshCutoff = self.threshCutoff
-        result.color = self.color
         result.groupLabels = deepcopy(self.groupLabels)
 
         result.blobFinder = blobFinder.blobFinder(self.blobFinder.slide)
         result.blobFinder.copyParameters(self.blobFinder)
 
         return result
+
+    def partialDeepCopy(self, newBlobs):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+
+        result.blobs = newBlobs
+        result.generateGroupLabels()
+        result.filters = deepcopy(self.filters)
+        result.description = deepcopy(self.description)
+        result.ROI = deepcopy(self.ROI)
+        result.threshCutoff = self.threshCutoff
+
+        result.blobFinder = blobFinder.blobFinder(self.blobFinder.slide)
+        result.blobFinder.copyParameters(self.blobFinder)
+
+        return result
+
 
     def saveBlobs(self, filename):
         '''
@@ -601,7 +616,7 @@ class blobList(object):
                     self.groupLabels[b.group] = (max(b.X, p[0]), min(b.Y, p[1]))
 
 
-    def getPatches(self, limitDraw, slideWrapper):
+    def getPatches(self, limitDraw, slideWrapper, blobColor):
 
         todraw = slideWrapper.getBlobsInBounds(self.blobs)
 
@@ -611,6 +626,6 @@ class blobList(object):
                                                len(todraw)//GUIConstants.DRAW_LIMIT)]
 
         return list(map(lambda el: plt.Circle((el[0],el[1]), el[2],
-                                             color = self.color,
+                                             color = blobColor,
                                              linewidth = 1,
                                              fill = False), todraw))

@@ -57,6 +57,7 @@ class MicroMSModel(object):
         self.currentBlobs = 0
         self.tempBlobs = None
         self.histogramBlobs = None
+        self.histColors = None
         self.filters = []
         self.coordinateMapper.clearPoints()
         self.savedBlobs = None
@@ -387,9 +388,10 @@ class MicroMSModel(object):
     def setBlobSubset(self, blobSubset):
         '''
         Sets the histogram blobs supplied by a histcanvas
-        blobSubset: an odd object...
+        blobSubset: an odd object, tuple of lists, first is a blobList, second a list of colors
         '''
-        self.histogramBlobs = blobSubset
+        self.histogramBlobs = blobSubset[0]
+        self.histColors = blobSubset[1]
 
     def reportSlideStep(self, direction, stepSize):
         '''
@@ -510,19 +512,20 @@ class MicroMSModel(object):
 
         #draw histogram blobs
         if self.histogramBlobs is not None and len(self.histogramBlobs) != 0:
-            for blbs in self.histogramBlobs:
-                ptches.extend(blbs.getPatches(limitDraw, self.slide))
+            for i, blbs in enumerate(self.histogramBlobs):
+                ptches.extend(blbs.getPatches(limitDraw, self.slide, self.histColors[i]))
 
         #draw blobs
         else:
             #draw all blob lists with their own color
             if self.drawAllBlobs == True:
-                for blobs in self.blobCollection:
-                    ptches.extend(blobs.getPatches(limitDraw, self.slide))
+                for j, blobs in enumerate(self.blobCollection):
+                    ptches.extend(blobs.getPatches(limitDraw, self.slide, GUIConstants.MULTI_BLOB[j]))
 
             #show only the current blob list
             else:
-                ptches.extend(self.blobCollection[self.currentBlobs].getPatches(limitDraw, self.slide))
+                ptches.extend(self.blobCollection[self.currentBlobs].getPatches(limitDraw, self.slide,
+                                                                                GUIConstants.MULTI_BLOB[self.currentBlobs]))
 
         #return list of patches as a patch collection, if none match_original must be false
         return PatchCollection(ptches, match_original=(len(ptches) != 0))
