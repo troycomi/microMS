@@ -667,10 +667,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                
         if filt is not None:
             message = self.histCanvas.getFilterDescription()
-            oldBlbs = self.model.updateCurrentBlobs(filt)
+            self.model.updateCurrentBlobs(filt)
             self.model.blobCollection[self.model.currentBlobs].filters.append(message)
-            self.statusBar().showMessage(
-                message + "; original set in list {}".format(oldBlbs+1))
+            self.statusBar().showMessage(message)
             self.histCanvas.calculateHist()
             self.slideCanvas.draw()
         else:
@@ -957,10 +956,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     self.model.drawAllBlobs = not self.model.drawAllBlobs
                 else:
                     self.model.showPatches= not self.model.showPatches
-                
-            #toggle between saved and global blobs.  This is set by hex or circ packing and distance filtering
-            elif event.key() == QtCore.Qt.Key_Z and event.modifiers() & QtCore.Qt.ControlModifier:
-                self.model.restoreSavedBlobs()
     
             #cycle between image channels with t or z
             elif event.key() == QtCore.Qt.Key_T or event.key() == QtCore.Qt.Key_Z:
@@ -983,10 +978,19 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     self.model.testBlobFind()    
 
             elif event.key() == QtCore.Qt.Key_C:
-                ##clears all target positions
-                if event.modifiers() & QtCore.Qt.ShiftModifier:
+                #clears all target positions
+                if event.modifiers() & QtCore.Qt.ShiftModifier and \
+                    event.modifiers() & QtCore.Qt.ControlModifier:
                     self.model.resetVariables()
                     self.histCanvas.resetVariables(True, True)
+                    if self.showHist == True:
+                        self.histCanvas.calculateHist()
+                #clears current target positions
+                elif event.modifiers() & QtCore.Qt.ShiftModifier:
+                    self.model.blobCollection[self.model.currentBlobs].blobs = []
+                    self.histCanvas.resetVariables(True, True)
+                    if self.showHist == True:
+                        self.histCanvas.calculateHist()
                 #clears filters and ROI positions
                 else:
                     self.model.blobCollection[self.model.currentBlobs].ROI = []

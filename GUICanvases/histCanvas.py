@@ -99,6 +99,7 @@ class HistCanvas(MplCanvas):
     def _calculateHist(self, resetVars = True):
         #return immediately if globalBlbs is not set
         if self.populationValues is None:
+            self.update_figure()
             return
 
         #metric >= 3 -> look at morphology
@@ -129,6 +130,7 @@ class HistCanvas(MplCanvas):
         #return immediately if globalBlbs is not set
         if self.blobSet is None or len(self.blobSet.blobs) == 0:
             self.populationValues = None
+            self._calculateHist()
             return
 
         #metric == 3 -> look at the area (= pi * r^2)
@@ -397,7 +399,9 @@ class HistCanvas(MplCanvas):
         redraw the figure by recalculating the graph and recoloring
         The blob subsets are passed back to the model
         '''
-        if self.populationValues is not None:
+        if self.populationValues is None:
+            self.axes.cla()
+        else:
             #draw bar chart of entire population
             self.axes.bar(self.bins, self.counts, width = self.bins[0] - self.bins[1], 
                           color = GUIConstants.BAR_COLORS[self.populationMetric])
