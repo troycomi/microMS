@@ -182,6 +182,7 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #wait for dwellTime
         time.sleep(self.dwellTime)
         self.toggleProbe()#raise
+        self.finishCollection(forceHome = False)
 
     def collectAll(self, positions):
         '''
@@ -196,13 +197,16 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #collected from each position
         for p in positions:
             self._collect(p)
+        self.finishCollection(forceHome = True)
+
+    def finishCollection(self, forceHome):
         #if self.postAcqusitionWait is not 0, have to move to final position
         if self.postAcqusitionWait != 0:
             self.finalPosition()
             if self.postAcqusitionWait != -1:
                 time.sleep(self.postAcqusitionWait)
                 self.homeAll()
-        else:
+        elif forceHome == True:
             #finish homing all
             self.homeAll()
 
