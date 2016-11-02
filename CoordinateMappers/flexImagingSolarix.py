@@ -47,19 +47,14 @@ class flexImagingSolarix(solarixMapper):
         output.close()
 
     def saveInstrumentRegFile(self, filename):
-        blobs = [blob(p[0], p[1]) for p in self.pixelPoints]
-        if blobs is None or len(blobs) == 0:
+        if self.pixelPoints is None or len(self.pixelPoints) == 0:
             return
         output = open(filename, 'w')
         output.write('# X-pos Y-pos spot-name region\n')
 
-        for b in blobs:
-            phys = self.translate((b.X, b.Y))
-            if b.group is not None:
-                output.write('{0:.0f} {1:.0f} s{4}_x{2:.0f}_y{3:.0f} 01\n'
-                             .format(phys[0], -phys[1], b.X, b.Y, b.group))
-            else:
-                output.write('{0:.0f} {1:.0f} x{2:.0f}_y{3:.0f} 01\n'.format(phys[0], -phys[1], b.X, b.Y))
+        for p in self.pixelPoints:
+            phys = self.translate((p[0], p[1]))
+            output.write('{0:.0f} {1:.0f} x{2:.0f}_y{3:.0f} 01\n'.format(phys[0], -phys[1], p[0], p[1]))
 
 
     def loadInstrumentFile(self, filename):

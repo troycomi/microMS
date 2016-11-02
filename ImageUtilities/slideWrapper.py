@@ -1,5 +1,5 @@
 import openslide
-from PIL import Image
+from PIL import Image, TiffImagePlugin
 import PIL.ImageOps
 import numpy as np
 import numpy.matlib
@@ -479,9 +479,11 @@ class SlideWrapper(object):
         path: path containing image file.  New images written here
         baseFile: base file name with extension, 8x and 64x will be prepended onto base name
         '''
-        SlideWrapper.decimateImg(openslide.open_slide(os.path.join(path,baseFile)),8).save(os.path.join(path,'8x' + baseFile))
-        SlideWrapper.decimateImg(openslide.open_slide(os.path.join(path,'8x' + baseFile)),8).save(os.path.join(path,'64x' + baseFile))        
-        
+        TiffImagePlugin.WRITE_LIBTIFF = True
+        SlideWrapper.decimateImg(openslide.open_slide(os.path.join(path,baseFile)),8).save(os.path.join(path,'8x' + baseFile), compression='tiff_lzw')
+        SlideWrapper.decimateImg(openslide.open_slide(os.path.join(path,'8x' + baseFile)),8).save(os.path.join(path,'64x' + baseFile), compression='tiff_lzw')        
+        TiffImagePlugin.WRITE_LIBTIFF = False
+
     @staticmethod
     def generateDecimatedImgs(filename):
         '''

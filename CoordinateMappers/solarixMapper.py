@@ -112,6 +112,8 @@ class solarixMapper(brukerMapper.brukerMapper):
         returns the predicted string
         '''
         clipboard = QtGui.QApplication.clipboard()
-        if clipboard is not None and clipboard.text() is not None:
+        if clipboard is not None and \
+            clipboard.text() is not None and \
+            clipboard.text() != '':
             return clipboard.text()
         return super().predictName(pixelPoint)

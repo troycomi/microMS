@@ -569,7 +569,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.slideCanvas.draw()
         
         if self.showHist == True:
-            self.histCanvas.calculateHist()
+            self.toggleHistWindow()
         
     def blbPopup(self):
         '''
