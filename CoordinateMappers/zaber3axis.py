@@ -26,6 +26,7 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         
         self.mediumFactor = 10
         self.largeFactor = 100
+        self.giantFactor = 1000
 
         #the position of the z axis when the probe is at the surface
         self.bottomPosition = 0;
@@ -167,11 +168,12 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #move the probe into place (is blocking)
         self.moveToPositionXY(position)
         #collect at the current position
-        self.collect()
+        self.collect(finish = False)
 
-    def collect(self):
+    def collect(self, finish = True):
         '''
         Collect at the current position for self.dwellTime
+		finish: call self.finishCollection at end of collection
         '''
         #do nothing if not connected
         if not self.connected:
@@ -182,7 +184,8 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #wait for dwellTime
         time.sleep(self.dwellTime)
         self.toggleProbe()#raise
-        self.finishCollection(forceHome = False)
+        if finish == True:
+            self.finishCollection(forceHome = False)
 
     def collectAll(self, positions):
         '''
@@ -195,8 +198,10 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #start by homing all
         self.homeAll()
         #collected from each position
-        for p in positions:
+        for i, p in enumerate(positions):
+            print("Collecting from sample {}".format(i+1))
             self._collect(p)
+        print("Finished collection")
         self.finishCollection(forceHome = True)
 
     def finishCollection(self, forceHome):
@@ -225,6 +230,8 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
             step *= self.mediumFactor
         elif stepSize == StepSize.large:
             step *= self.largeFactor
+        elif stepSize == StepSize.giant:
+            step *= self.giantFactor
         if direction == Direction.up:
             step = -step
         self._send(self.zdev, self.COMMANDS['MOVE_REL'], step)
