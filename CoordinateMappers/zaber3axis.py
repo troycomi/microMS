@@ -198,8 +198,10 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #start by homing all
         self.homeAll()
         #collected from each position
-        for p in positions:
+        for i, p in enumerate(positions):
+            print("Collecting from sample {}".format(i+1))
             self._collect(p)
+        print("Finished collection")
         self.finishCollection(forceHome = True)
 
     def finishCollection(self, forceHome):
