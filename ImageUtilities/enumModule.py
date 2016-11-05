@@ -18,3 +18,4 @@ class StepSize(Enum):
     small = 1
     medium = 2
     large = 3
+    giant = 4

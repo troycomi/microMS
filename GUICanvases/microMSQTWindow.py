@@ -923,7 +923,10 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         if self.model.slide is not None:
             shift = event.modifiers() & QtCore.Qt.ShiftModifier
             #move with wsad
-            if shift and event.modifiers() & QtCore.Qt.ControlModifier:
+            if shift and event.modifiers() & QtCore.Qt.ControlModifier and\
+                event.modifiers() & QtCore.Qt.AltModifier:
+                stepSize = StepSize.giant
+            elif shift and event.modifiers() & QtCore.Qt.ControlModifier:
                 stepSize = StepSize.medium
             elif shift:
                 stepSize = StepSize.large

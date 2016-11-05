@@ -26,6 +26,7 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         
         self.mediumFactor = 10
         self.largeFactor = 100
+        self.giantFactor = 1000
 
         #the position of the z axis when the probe is at the surface
         self.bottomPosition = 0;
@@ -227,6 +228,8 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
             step *= self.mediumFactor
         elif stepSize == StepSize.large:
             step *= self.largeFactor
+        elif stepSize == StepSize.giant:
+            step *= self.giantFactor
         if direction == Direction.up:
             step = -step
         self._send(self.zdev, self.COMMANDS['MOVE_REL'], step)
