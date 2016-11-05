@@ -167,11 +167,12 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #move the probe into place (is blocking)
         self.moveToPositionXY(position)
         #collect at the current position
-        self.collect()
+        self.collect(finish = False)
 
-    def collect(self):
+    def collect(self, finish = True):
         '''
         Collect at the current position for self.dwellTime
+		finish: call self.finishCollection at end of collection
         '''
         #do nothing if not connected
         if not self.connected:
@@ -182,7 +183,8 @@ class Zaber3Axis(zaberInterface.ZaberIterface,
         #wait for dwellTime
         time.sleep(self.dwellTime)
         self.toggleProbe()#raise
-        self.finishCollection(forceHome = False)
+        if finish == True:
+            self.finishCollection(forceHome = False)
 
     def collectAll(self, positions):
         '''
