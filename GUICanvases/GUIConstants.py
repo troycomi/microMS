@@ -2,8 +2,8 @@
 ####colors and sizes of GUI components in slideCanvas
 #default and boarder color of the slide image
 IMAGE_BACKGROUND        =   'black'
-#color of temporary or test cell find
-TEMP_CELL_FIND          =   'turquoise'
+#color of temporary or test blob find
+TEMP_BLOB_FIND          =   'turquoise'
 #predicted locations from the current mapper
 PREDICTED_POINTS        =   'yellow'
 #color of circle and text of highest FLE 
@@ -41,8 +41,8 @@ LOW_BAR                 =   'cyan'
 HIGH_BAR                =   'hotpink'
 #color of bars and blobs with values in a single bar
 SINGLE_BAR              =   'darkorange'
-#color of line to indicate a single cell position
-SINGLE_CELL             =   'red'
+#color of line to indicate a single blob position
+SINGLE_BLOB             =   'red'
 
 ###constants for blob shapes
 DEFAULT_BLOB_RADIUS     =   DEFAULT_RADIUS
@@ -53,8 +53,8 @@ DEFAULT_PATTERN_RADIUS  =   DEFAULT_RADIUS
 DEBUG_DIR               =   r'T:\Cerebellum One Left Stitched _'
 #image file
 DEBUG_IMG_FILE          =   r'T:\Cerebellum One Left Stitched _\Cerebellum One Left Stitched __c1.tif'
-#cell find file
-DEBUG_CELL_FIND         =   r'T:\Cerebellum One Left Stitched _\sol_find.txt'
+#blob find file
+DEBUG_BLOB_FIND         =   r'T:\Cerebellum One Left Stitched _\sol_find.txt'
 #registration file
 DEBUG_REG_FILE          =   r'T:\Cerebellum One Left Stitched _\sol.msreg'
 
@@ -64,18 +64,18 @@ IMAGE_HOTKEYS           =   ("w,s,a,d\t\tMove\n"
         "q,e\t\tZoom out/in\n"
         "r\t\tReset view\n"
         "t\t\tSwitch views\n"
-        "b\t\tTest cell find\n"
+        "b\t\tTest blob find\n"
         "B\t\tSwitch to threshold view\n"
         "m\t\tMirror x axis\n"
         "p\t\tToggle predicted location\n"
         "o\t\tToggle drawn shapes\n"
-        "O\t\tToggle drawing all cell lists\n"
-        "Ctrl + C\tClear all found cells\n"
-        "C\t\tClear current cell list\n"
+        "O\t\tToggle drawing all blob lists\n"
+        "Ctrl + C\tClear all found blobs\n"
+        "C\t\tClear current blob list\n"
         "c\t\tClear ROI\n\n"
         "#\t\tToggle channel\n"
         "Ctrl+#\t\tSet channel\n"
-        "Alt+#\t\tSet manual cell list\n\n"
+        "Alt+#\t\tSet manual blob list\n\n"
         "LMB\t\tMove to center\n"
         "LMB+Shift\tAdd/remove points\n"
         "LMB+Ctrl\tDraw ROI\n"

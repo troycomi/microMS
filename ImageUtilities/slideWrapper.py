@@ -210,7 +210,7 @@ class SlideWrapper(object):
     
     def getMaxZoomImage(self, position = None, size = None, imgInd = 1):
         '''
-        Get the image at the maximum zoom level.  Used in cell finding
+        Get the image at the maximum zoom level.  Used in blob finding
         position: tuple of x,y position of image center.  None to use self.position
         size: tuple of width and height, None for self.size
         imgInd: the image index to read

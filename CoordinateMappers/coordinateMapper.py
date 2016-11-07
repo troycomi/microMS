@@ -73,7 +73,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         '''
         read in an instrument file produced by saveInstrumentFile
         filename: the name of the instrument file
-        should return a list of blobs used in cell finding, 
+        should return a list of blobs used in blob finding, 
         radius and circularity can be hard coded as GUIConstants.DEFAULT_BLOB_RADIUS and 1 for display purposes
         '''
 

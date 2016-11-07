@@ -213,7 +213,7 @@ class SlideCanvas(MplCanvas):
     
     def mouseMove(self,event, extras = None):
         '''
-        mouse moves redraw ROI or cell positions as appropriate
+        mouse moves redraw ROI or blob positions as appropriate
         event: an mpl mouse move event
         '''
         if event.xdata is None or event.ydata is None:
@@ -301,7 +301,7 @@ class SlideCanvas(MplCanvas):
         
     def redrawCirc(self, pnt):
         '''
-        helper method to draw the green circle for manually added cells
+        helper method to draw the green circle for manually added blobs
         pnt: the current mouse position in local (image) coordinates
         '''
         if self.tempIm is not None:

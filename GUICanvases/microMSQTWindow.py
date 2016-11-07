@@ -103,9 +103,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         saveSub.addSeparator()
 
         saveSub.addAction('&Registration', self.saveReg)
-        saveSub.addAction('&Current Cells', self.saveCurrentFind)
+        saveSub.addAction('&Current Blobss', self.saveCurrentFind)
         saveSub.addAction('&Histogram Divisions', self.saveHistogramBlobs)
-        saveSub.addAction('All Lists of Cells', self.saveAllBlobs)
+        saveSub.addAction('All Lists of Blobs', self.saveAllBlobs)
 
         saveSub.addSeparator()
         
@@ -122,7 +122,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.file_menu.addMenu(loadSub)
         
         loadSub.addAction('&Registration', self.loadReg)
-        loadSub.addAction('&Found Cells', self.loadCellFind)
+        loadSub.addAction('&Found Blobs', self.loadBlobFind)
         loadSub.addAction('&Instrument Positions', self.loadInstrumentPositions)
         
         #quit button
@@ -133,13 +133,13 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         #tools menu
         self.tools_menu = QtGui.QMenu('&Tools',self)
 
-        #cell find
-        self.tools_menu.addAction('&Blob Find', self.globalCell)
+        #blob find
+        self.tools_menu.addAction('&Blob Find', self.globalBlob)
         #blob options
         self.tools_menu.addAction('&Blob Options',self.blbPopup,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_B)
-        #limit drawn cells toggle
-        self.limitDraw = QtGui.QAction('Limit Drawn Cells', self.tools_menu, checkable=True)
+        #limit drawn blobs toggle
+        self.limitDraw = QtGui.QAction('Limit Drawn Blobs', self.tools_menu, checkable=True)
         self.limitDraw.setChecked(True)
         self.tools_menu.addAction(self.limitDraw)
         self.tools_menu.addSeparator()
@@ -150,7 +150,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.tools_menu.addAction('Pick Extremes',self.histSelect)
         self.tools_menu.addAction('Apply Filter',self.histFilter,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_A)
-        #cell position options
+        #blob position options
         self.tools_menu.addSeparator()
         self.tools_menu.addAction('Distance Filter',self.distanceFilter)
         self.tools_menu.addAction('ROI Filter',self.roiFilter)
@@ -325,8 +325,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             
     def saveAll(self, extras = None):
         '''
-        saves files necessary for replicating the cell finding, specifically:
-        -Cell finding file with pixel locations of spots and find parameters
+        saves files necessary for replicating the blob finding, specifically:
+        -Blob finding file with pixel locations of spots and find parameters
         -Registration file with pixel to physical locations of fiducials
         '''
         if extras is None or not hasattr(extras, 'text'):
@@ -365,7 +365,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
     
     def saveCurrentFind(self, extras = None):
         '''
-        save cell finding of the current blob list
+        save blob finding of the current blob list
         '''
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtGui.QFileDialog.getSaveFileName(self,
@@ -382,7 +382,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
     def saveHistogramBlobs(self, extras = None):
         '''
-        save cell finding of all histogram filters
+        save blob finding of all histogram filters
         '''
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtGui.QFileDialog.getSaveFileName(self,
@@ -399,7 +399,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
     def saveAllBlobs(self, extras = None):
         '''
-        save cell finding of all blob lists
+        save blob finding of all blob lists
         '''
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtGui.QFileDialog.getSaveFileName(self,
@@ -499,9 +499,9 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.instruments.actions()[index].setChecked(True)
             self.slideCanvas.draw()   
             
-    def loadCellFind(self, extras = None):        
+    def loadBlobFind(self, extras = None):        
         '''
-        load sample positions and cell finding parameters
+        load sample positions and blob finding parameters
         '''
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtGui.QFileDialog.getOpenFileName(
@@ -557,11 +557,11 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         if self.fileName is not None:
             print("Exiting from file {}".format(self.fileName))
         
-    def globalCell(self, extras = None):
+    def globalBlob(self, extras = None):
         '''
-        cell find over the entire slide area or ROI
+        blob find over the entire slide area or ROI
         '''
-        self.statusBar().showMessage('Starting cell finding')
+        self.statusBar().showMessage('Starting blob finding')
         self.statusBar().showMessage(
             self.model.runGlobalBlobFind()    
         )
@@ -607,15 +607,15 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 
     def histSelect(self, extras =  None):
         '''
-        select the top and bottom X cells from the histogram
+        select the top and bottom X blobs from the histogram
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input number of highest and lowest intensity cells to find")
+            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input number of highest and lowest value blobs to find")
         else:
             text = extras.text
             ok = extras.ok
         if ok and not text == '':
-            self.histCanvas.setCellNum(int(text))
+            self.histCanvas.setBlobNum(int(text))
 
     def histSaveImage(self, extras = None):
         '''
@@ -640,7 +640,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
     def histSaveValues(self, extras = None):
         '''
-        Saves all the cell locations and values of the current histogram metric
+        Saves all the blob locations and values of the current histogram metric
         extras: optional data to bypass GUI display
         '''
         if self.showHist == False:
@@ -660,8 +660,8 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
     def histFilter(self):
         '''
-        applies the filter to the histogram, updating the cell find positions to those matching the filter
-        the filter is also recorded for writing the cell find file
+        applies the filter to the histogram, updating the blob find positions to those matching the filter
+        the filter is also recorded for writing the blob find file
         '''
         filt = self.histCanvas.getFilteredBlobs()
         if len(filt) == 0:
@@ -696,7 +696,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
     def roiFilter(self):
         '''
-        Performs filtering of cells falling within the ROI
+        Performs filtering of blobs falling within the ROI
         '''
         self.statusBar().showMessage(
             self.model.roiFilter()
@@ -974,7 +974,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                 #toggle threshold view
                 if shift:
                     self.model.showThreshold = not self.model.showThreshold
-                #perform cell finding on max zoom image
+                #perform blob finding on max zoom image
                 else:
                     self.model.testBlobFind()    
 
@@ -1008,7 +1008,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     #set global blobs to the multiblob specified
                     if event.modifiers() & QtCore.Qt.AltModifier:
                         self.model.setCurrentBlobs(i)
-                        self.statusBar().showMessage('Picking cells into list #{}'.format(i+1))
+                        self.statusBar().showMessage('Picking blobs into list #{}'.format(i+1))
                         if self.showHist:
                             self.histCanvas.calculateHist()
                     #switch to image channel i
@@ -1105,7 +1105,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.model.slide.lvl = 0
         
             #the blob finding file
-            self.model.loadBlobFinding(GUIConstants.DEBUG_CELL_FIND)
+            self.model.loadBlobFinding(GUIConstants.DEBUG_BLOB_FIND)
             #the registration file
             self.model.loadCoordinateMapper(GUIConstants.DEBUG_REG_FILE)
             self.slideCanvas.draw()

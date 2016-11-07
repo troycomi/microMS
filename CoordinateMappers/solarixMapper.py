@@ -7,7 +7,7 @@ class solarixMapper(brukerMapper.brukerMapper):
     """
     coordinate mapper for the solarix
     noticable changes include encoding of motor coordinates, 
-    requirement of xls for auto acqusition, and limiting number of cells/acquisition
+    requirement of xls for auto acqusition, and limiting number of blobs/acquisition
     """
 
     def __init__(self):
