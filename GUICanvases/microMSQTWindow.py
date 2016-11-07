@@ -103,7 +103,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         saveSub.addSeparator()
 
         saveSub.addAction('&Registration', self.saveReg)
-        saveSub.addAction('&Current Blobss', self.saveCurrentFind)
+        saveSub.addAction('&Current Blobs', self.saveCurrentFind)
         saveSub.addAction('&Histogram Divisions', self.saveHistogramBlobs)
         saveSub.addAction('All Lists of Blobs', self.saveAllBlobs)
 
