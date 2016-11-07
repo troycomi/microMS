@@ -24,13 +24,13 @@ class HistCanvas(MplCanvas):
         '''
         MplCanvas.__init__(self, *args, **kwargs)
         self.draw()
-        #start by showing the cell areas
+        #start by showing the blob areas
         self.populationMetric = 3
         self.populationValues = None
         self.blobSet = None
         #the image of the collection from slideWrapper to analyze
         self.imgInd = 1
-        #toggle to move the slide position to the first single cell
+        #toggle to move the slide position to the first single blob
         self.moveSlide = False
         
         #listeners for mouse interaction
@@ -40,7 +40,7 @@ class HistCanvas(MplCanvas):
         self.master = master
         self.model = model
     
-        #offset from cell radius to consider when extracting fluorescence
+        #offset from blob radius to consider when extracting fluorescence
         self.offset = 0
 
         #x axis limits for zooming
@@ -63,16 +63,16 @@ class HistCanvas(MplCanvas):
         resetBlobs: reset the list of blobs curretly investigated
         '''
         #lowIntens and lowLimit hold thresholds for low values of the population
-        #low cells have I such that lowLimit < I < lowIntens
+        #low blobs have I such that lowLimit < I < lowIntens
         self.lowIntens = None
         self.lowLimit = None
-        #high cells have I such that highIntens < I < highLimit
+        #high blobs have I such that highIntens < I < highLimit
         self.highIntens = None
         self.highLimit = None
         #single bar is a value bin in the histogram
         self.singleBar = None
-        #single cell contains the index of a single blob to show the position of in the histogram
-        self.singleCell = None
+        #single blob contains the index of a single blob to show the position of in the histogram
+        self.singleBlob = None
 
         if resetZoom:
             #zoom level on the x axis
@@ -223,11 +223,11 @@ class HistCanvas(MplCanvas):
             #redraw the zoom lvl
             self.redraw_zoom()
                
-    def setCellNum(self, target):
+    def setBlobNum(self, target):
         '''
         automatically sets a high and low threshold to select 
-        approximately the same number of cells in each condition
-        target: the target number of cells to find
+        approximately the same number of blobs in each condition
+        target: the target number of blobs to find
         '''
         #return when values not set
         if self.populationValues is None:
@@ -289,7 +289,7 @@ class HistCanvas(MplCanvas):
         if self.populationValues is None or len(self.populationValues) == 0:
             return 'Nothing to save'
         output = open(filename, 'w')
-        output.write('Cell\t{}\n'.format(self.metrics[self.populationMetric]))
+        output.write('Blob\t{}\n'.format(self.metrics[self.populationMetric]))
         for i,b in enumerate(self.model.blobCollection[self.model.currentBlobs].blobs):
             output.write('0_x_{0:.0f}y_{1:.0f}\t{2}\n'.format(b.X, b.Y, 
                                                               self.populationValues[i]))
@@ -461,10 +461,10 @@ class HistCanvas(MplCanvas):
 
             #draw lines displaying the values used for filtering
             #a single blob to highlight
-            if self.singleCell is not None:
-                if self.singleCell > 0 and self.singleCell < len(self.populationValues):
-                    self.axes.vlines(self.populationValues[self.singleCell], 0, 
-                                     self.axes.get_ylim()[1], colors = GUIConstants.SINGLE_CELL)
+            if self.singleBlob is not None:
+                if self.singleBlob > 0 and self.singleBlob < len(self.populationValues):
+                    self.axes.vlines(self.populationValues[self.singleBlob], 0, 
+                                     self.axes.get_ylim()[1], colors = GUIConstants.SINGLE_BLOB)
             #draw limits
             if self.lowLimit is not None:
                 self.axes.vlines(self.lowLimit, 0, self.axes.get_ylim()[1], colors = GUIConstants.LOW_BAR, linestyles='dashed')

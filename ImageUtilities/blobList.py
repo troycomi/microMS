@@ -78,7 +78,7 @@ class blobList(object):
 
     def saveBlobs(self, filename):
         '''
-        save the current cell coordinates in pixels and the set of cell find parameters
+        save the current blob coordinates in pixels and the set of blob find parameters
         and histogram filters applied to generate the set
         fileName: file to save to
         '''
@@ -148,13 +148,16 @@ class blobList(object):
 
 
     def blobSlide(self):
-        if len(self.ROI) == 0:
+        if len(self.ROI) < 3:
             self.blobs = self.blobFinder.blobSlide()
-            return "Finished blob finding on whole slide, found {} cells".format(len(self.blobs))
+            return "Finished blob finding on whole slide, found {} blobs".format(len(self.blobs))
         else:
             self.blobs = self.blobFinder.blobSlide(ROI = self.ROI)
-            self.roiFilter()
-            return "Finished blob finding in ROI, found {} cells".format(len(self.blobs))
+            if len(self.blobs) != 0:
+                roi = Path(self.ROI)
+                points = np.array([ (b.X,b.Y) for b in self.blobs])
+                self.blobs = [self.blobs[i] for i in np.argwhere(roi.contains_points(points))]
+            return "Finished blob finding in ROI, found {} blobs".format(len(self.blobs))
 
     def getROI(self, point, distCutoff):
         '''
@@ -224,7 +227,7 @@ class blobList(object):
         '''
         Filter blob positions based on a set separation distance.
         Implemented by dividing the area into different subregions.
-        Cells are binned into at least one region, then all pairwise distances
+        Blobs are binned into at least one region, then all pairwise distances
         are compared to the distance cutoff.
         Returns list of bool with result[i] == true if i has a neighbor too close (< dist away)
 
@@ -263,10 +266,10 @@ class blobList(object):
                 for k in np.where(tooClose)[0]:
                     result[subLocs[i][j][k]] = True
 
-        #determine number of cells passing filter
+        #determine number of blobs passing filter
         count = np.sum(result)
         #report to console
-        if verbose: print("Done! {} cells within {} pixels, {} remaining".format(count, dist, len(result) - count))
+        if verbose: print("Done! {} blobs within {} pixels, {} remaining".format(count, dist, len(result) - count))
         
         newList = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(~np.array(result))])
         newList.filters.append("distance > {}".format(dist))
@@ -475,7 +478,7 @@ class blobList(object):
         Expands each blob into a grid of points, with regular rectangular spacing
         blobs: list of blob objects to expand
         spacing: spacing between new blobs
-        numLayers: number of layers around each cell. 1 generates a grid of 3x3 with the 
+        numLayers: number of layers around each blob. 1 generates a grid of 3x3 with the 
             initial blob in the center.  This can be adjusted for radius
         r: radius to set new blobs to
         c: circularity of new blobs
@@ -543,7 +546,7 @@ class blobList(object):
         Expands each blob into a grid of points, with hexagonal close packed spacing
         blobs: list of blob objects to expand
         spacing: spacing between new blobs
-        numLayers: number of layers around each cell. 1 generates a grid of 7 with the 
+        numLayers: number of layers around each blob. 1 generates a grid of 7 with the 
             initial blob in the center.  This can be adjusted for radius
         r: radius to set new blobs to
         c: circularity of new blobs

@@ -317,7 +317,7 @@ class MicroMSModel(object):
         startLen = self.currentBlobLength()
         self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].roiFilter())
         endLen = self.currentBlobLength()
-        return "{} cells removed, {} remain".format(startLen - endLen, endLen)
+        return "{} blobs removed, {} remain".format(startLen - endLen, endLen)
 
 
     def hexPackBlobs(self, separation, layers, dynamicLayering = False):
@@ -449,11 +449,11 @@ class MicroMSModel(object):
         if self.showPatches == False or self.slide is None:
             return PatchCollection(ptches)
 
-        #temp blobs from cell finding test.  Only drawn once and the only displayed thing
+        #temp blobs from blob finding test.  Only drawn once and the only displayed thing
         if self.tempBlobs is not None:
             ptches = [plt.Circle((blb.X, blb.Y),
                                   blb.radius,
-                                  color = GUIConstants.TEMP_CELL_FIND,
+                                  color = GUIConstants.TEMP_BLOB_FIND,
                                   linewidth = 1,
                                   fill = False)
                        for blb in self.tempBlobs]
@@ -616,9 +616,9 @@ class MicroMSModel(object):
             return "No slide loaded"
 
         point = self.slide.getGlobalPoint(localPoint)
-        #if the histogram canvas is shown, highlight that cell's location
+        #if the histogram canvas is shown, highlight that blob's location
         if self.GUI is not None and self.GUI.showHist:
-            #find cell if user clicked in bounds
+            #find blob if user clicked in bounds
             if self.blobCollection[self.currentBlobs] is not None and \
                 self.blobCollection[self.currentBlobs].length() > 0:
 
@@ -628,12 +628,12 @@ class MicroMSModel(object):
                     #see if click point is within radius
                     if (localPoint[0]-p[0])**2 + (localPoint[1] - p[1])**2 <= \
                         (self.blobCollection[self.currentBlobs].blobs[inds[i]].radius/2**self.slide.lvl)**2:
-                            self.GUI.histCanvas.singleCell = inds[i]
+                            self.GUI.histCanvas.singleBlob = inds[i]
                             found = True
                             break
                 #if not found, set to None
                 if not found:
-                    self.GUI.histCanvas.singleCell = None
+                    self.GUI.histCanvas.singleBlob = None
 
         #get pixel color and alpha (discarded)
         try:

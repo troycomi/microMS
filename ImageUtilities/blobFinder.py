@@ -39,7 +39,7 @@ class blobFinder(object):
 
     def copyParameters(self, other):
         '''
-        Copies cell finding parameters from another cellFinder instance
+        Copies blob finding parameters from another blobFinder instance
         other: blobFinder object to copy parameters from
         '''
         self.minSize = other.minSize
@@ -54,7 +54,7 @@ class blobFinder(object):
     def getParameters(self):
         '''
         get the set of parameters as a dictionary
-        returns a dictionary of string -> value  pairs of all parameters for cell finding
+        returns a dictionary of string -> value  pairs of all parameters for blob finding
         '''
         return {
                 'minSize' : self.minSize,
@@ -155,7 +155,7 @@ class blobFinder(object):
         img: the image to blob find
         sizes: (min, max) size to consider  max == None means not max size
         channel: r,g,b channel to threshold
-        threshold: minimum pixel intensity to count as cell
+        threshold: minimum pixel intensity to count as blob
         circs: (min, max) circularity to consider max == None means no max
         xShift: amount to add to x coordinate to shift into global coordinate
         yShift: amount to add to x coordinate to shift into global coordinate
