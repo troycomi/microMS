@@ -43,7 +43,7 @@ class blobFinder(object):
         other: blobFinder object to copy parameters from
         '''
         self.minSize = other.minSize
-        self.maxSize = other.maxCircularity
+        self.maxSize = other.maxSize
         self.minCircularity = other.minCircularity
         self.maxCircularity = other.maxCircularity
         self.colorChannel = other.colorChannel
