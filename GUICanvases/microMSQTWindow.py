@@ -193,7 +193,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
-                filter='Slide Scans (*.ndpi *.tif)')  
+                filter='Slide Scans (*.ndpi *.tif)')[0]  
 
         else:
             fileName = extras.fileName
@@ -208,7 +208,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File to Decimate',
-                filter='Slide Scans (*.tif)') 
+                filter='Slide Scans (*.tif)') [0]
 
         else:
             fileName = extras.fileName
@@ -227,7 +227,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         if extras is None or not hasattr(extras, 'fileName'):
             fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File to Decimate',
-                filter='Slide Scans (*.tif)') 
+                filter='Slide Scans (*.tif)')[0] 
 
         else:
             fileName = extras.fileName
@@ -485,7 +485,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
             fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 self.directory,
-                filter='*.msreg')  
+                filter='*.msreg')[0]  
         else:
             fileName = extras.fileName
 
@@ -507,7 +507,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
             fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 self.directory,
-                filter='*.txt')  
+                filter='*.txt')[0]  
         else:
             fileName = extras.fileName
 
@@ -528,7 +528,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
             fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 self.directory,
-                filter='*' + self.model.currentInstrumentExtension())  
+                filter='*' + self.model.currentInstrumentExtension())[0]  
         else:
             fileName = extras.fileName
 
