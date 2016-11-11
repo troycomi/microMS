@@ -1,6 +1,6 @@
 from CoordinateMappers import brukerMapper
 import xlsxwriter
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 import os
 
 class solarixMapper(brukerMapper.brukerMapper):
@@ -111,7 +111,7 @@ class solarixMapper(brukerMapper.brukerMapper):
         pixelPoint: (x,y) tuple of global pixel space
         returns the predicted string
         '''
-        clipboard = QtGui.QApplication.clipboard()
+        clipboard = QtWidgets.QApplication.clipboard()
         if clipboard is not None and \
             clipboard.text() is not None and \
             clipboard.text() != '':

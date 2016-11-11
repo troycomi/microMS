@@ -1,6 +1,6 @@
 import sys
 import ctypes
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 from GUICanvases.microMSQTWindow import MicroMSQTWindow
 
@@ -8,7 +8,7 @@ def main():
     '''
     main method that begins execution of the QApplication
     '''
-    qApp = QtGui.QApplication(sys.argv) 
+    qApp = QtWidgets.QApplication(sys.argv) 
 
     #set up icon
     myappid = 'uiuc.sweedlerlab.microms.v1'

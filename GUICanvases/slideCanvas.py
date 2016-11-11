@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QCursor
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor
 
 import numpy as np
 import random
@@ -107,7 +107,7 @@ class SlideCanvas(MplCanvas):
         if extras is not None and hasattr(extras, 'modifiers'):
             modifiers = extras.modifiers
         else:
-            modifiers = QtGui.QApplication.keyboardModifiers()
+            modifiers = QtWidgets.QApplication.keyboardModifiers()
 
         #left mouse button click without dragging 
         #generally handles image movement and interaction with target locations
@@ -197,7 +197,7 @@ class SlideCanvas(MplCanvas):
         if extras is not None and hasattr(extras, 'modifiers'):
             modifiers = extras.modifiers
         else:
-            modifiers = QtGui.QApplication.keyboardModifiers()
+            modifiers = QtWidgets.QApplication.keyboardModifiers()
 
         #ROI drawing
         if event.button == 1 and \
@@ -227,7 +227,7 @@ class SlideCanvas(MplCanvas):
         if extras is not None and hasattr(extras, 'modifiers'):
             modifiers = extras.modifiers
         else:
-            modifiers = QtGui.QApplication.keyboardModifiers()
+            modifiers = QtWidgets.QApplication.keyboardModifiers()
 
         if self.mDown == True:
             self.redrawRect((event.xdata, event.ydata))

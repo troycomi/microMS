@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import numpy as np
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from copy import copy
 
 from GUICanvases.mplCanvas import MplCanvas
@@ -163,7 +163,7 @@ class HistCanvas(MplCanvas):
         #LMB to set low values
         if event.button == 1:
             #shift LMB to set the lower limit
-            if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier:
+            if QtWidgets.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier:
                 self.lowLimit = event.xdata
             #LMB to set a lower threshold
             else:
@@ -186,7 +186,7 @@ class HistCanvas(MplCanvas):
         #RMB to set high values
         if event.button == 3:
             #shift RMB to set the higher limit
-            if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier:
+            if QtWidgets.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier:
                 self.highLimit = event.xdata
 
             #RMB to set the higher threshold

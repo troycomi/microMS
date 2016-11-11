@@ -3,9 +3,9 @@
 a collection of small, custom popup windows used by microMSQT
 """
 
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 
-class blbPopupWindow(QtGui.QDialog):
+class blbPopupWindow(QtWidgets.QDialog):
     '''
     Window for setting blob finding parameters
     '''
@@ -22,34 +22,34 @@ class blbPopupWindow(QtGui.QDialog):
         self.setWindowTitle("Blob Find Entry")        
         
         #user input widgets
-        self.minText = QtGui.QLineEdit(self)
-        self.maxText = QtGui.QLineEdit(self)
-        self.minCirText = QtGui.QLineEdit(self)
-        self.maxCirText = QtGui.QLineEdit(self)
-        self.intens = QtGui.QLineEdit(self)
-        self.imgInd = QtGui.QLineEdit(self)
-        self.channel = QtGui.QComboBox(self)
+        self.minText = QtWidgets.QLineEdit(self)
+        self.maxText = QtWidgets.QLineEdit(self)
+        self.minCirText = QtWidgets.QLineEdit(self)
+        self.maxCirText = QtWidgets.QLineEdit(self)
+        self.intens = QtWidgets.QLineEdit(self)
+        self.imgInd = QtWidgets.QLineEdit(self)
+        self.channel = QtWidgets.QComboBox(self)
         self.channel.addItem("Red")
         self.channel.addItem("Green")
         self.channel.addItem("Blue")
 
         #add to vbox layout with labels
-        vbox = QtGui.QVBoxLayout()
-        vbox.addWidget(QtGui.QLabel("Minimum Size",self))
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(QtWidgets.QLabel("Minimum Size",self))
         vbox.addWidget(self.minText)
-        vbox.addWidget(QtGui.QLabel("Maximum Size",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Maximum Size",self)) 
         vbox.addWidget(self.maxText)
-        vbox.addWidget(QtGui.QLabel("Minimum Circularity",self))
+        vbox.addWidget(QtWidgets.QLabel("Minimum Circularity",self))
         vbox.addWidget(self.minCirText)
-        vbox.addWidget(QtGui.QLabel("Maximum Circularity",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Maximum Circularity",self)) 
         vbox.addWidget(self.maxCirText)
-        vbox.addWidget(QtGui.QLabel("Threshold",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Threshold",self)) 
         vbox.addWidget(self.intens)
-        vbox.addWidget(QtGui.QLabel("Image Channel",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Image Channel",self)) 
         vbox.addWidget(self.imgInd)
-        vbox.addWidget(QtGui.QLabel("Color",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Color",self)) 
         vbox.addWidget(self.channel)
-        self.setButton = QtGui.QPushButton("Set Parameters",self)
+        self.setButton = QtWidgets.QPushButton("Set Parameters",self)
         self.setButton.clicked.connect(self.setParams)
         vbox.addWidget(self.setButton)
         
@@ -109,7 +109,7 @@ class blbPopupWindow(QtGui.QDialog):
             self.master.model.testBlobFind()
             self.master.slideCanvas.draw()
 
-class gridPopupWindow(QtGui.QDialog):
+class gridPopupWindow(QtWidgets.QDialog):
     '''
     displays a table with the current intermediate map of the mapper for the user to edit
     '''
@@ -122,8 +122,8 @@ class gridPopupWindow(QtGui.QDialog):
         super(gridPopupWindow,self).__init__(parent)
         
         self.setWindowTitle("Stage Locations")
-        vbox = QtGui.QVBoxLayout()
-        self.table = QtGui.QTableWidget(self)
+        vbox = QtWidgets.QVBoxLayout()
+        self.table = QtWidgets.QTableWidget(self)
         vbox.addWidget(self.table)
         self.setLayout(vbox)
         
@@ -138,7 +138,7 @@ class gridPopupWindow(QtGui.QDialog):
         self.table.update()
         for i,m in enumerate(previousPoints):
             for j,el in enumerate(m):
-                self.table.setItem(i,j,QtGui.QTableWidgetItem(str(el)))
+                self.table.setItem(i,j,QtWidgets.QTableWidgetItem(str(el)))
 
     def closeEvent(self,evnt):
         '''
@@ -155,7 +155,7 @@ class gridPopupWindow(QtGui.QDialog):
         #close
         self.hide()
 
-class histPopupWindow(QtGui.QDialog):
+class histPopupWindow(QtWidgets.QDialog):
     '''
     a popup window to adjust histogram options such as display image and metric
     '''
@@ -173,29 +173,29 @@ class histPopupWindow(QtGui.QDialog):
         self.setWindowTitle("Histogram Options")        
         
         #generate user io widgets
-        self.imgInd = QtGui.QLineEdit(self)
-        self.channel = QtGui.QComboBox(self)
+        self.imgInd = QtWidgets.QLineEdit(self)
+        self.channel = QtWidgets.QComboBox(self)
         for m in self.hist.metrics:
             self.channel.addItem(m)
 
-        self.offset = QtGui.QLineEdit(self)
-        self.max = QtGui.QRadioButton(self)
+        self.offset = QtWidgets.QLineEdit(self)
+        self.max = QtWidgets.QRadioButton(self)
         self.max.setText('Max Intensity')
-        self.mean = QtGui.QRadioButton(self)
+        self.mean = QtWidgets.QRadioButton(self)
         self.mean.setText('Average Intensity')
 
         #add to vbox layout with labels
-        vbox = QtGui.QVBoxLayout()
-        vbox.addWidget(QtGui.QLabel("Image Channel",self)) 
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(QtWidgets.QLabel("Image Channel",self)) 
         vbox.addWidget(self.imgInd)
-        vbox.addWidget(QtGui.QLabel("Color or Morphology",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Color or Morphology",self)) 
         vbox.addWidget(self.channel)
-        vbox.addWidget(QtGui.QLabel("Offset (pixels)",self)) 
+        vbox.addWidget(QtWidgets.QLabel("Offset (pixels)",self)) 
         vbox.addWidget(self.offset)
         vbox.addWidget(self.max)
         vbox.addWidget(self.mean)
 
-        btn = QtGui.QPushButton("Set Parameters",self)
+        btn = QtWidgets.QPushButton("Set Parameters",self)
         btn.clicked.connect(self.setParams)
         vbox.addWidget(btn)
         

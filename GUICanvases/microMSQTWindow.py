@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 from CoordinateMappers import supportedCoordSystems
 from CoordinateMappers import connectedInstrument
@@ -14,7 +14,7 @@ from GUICanvases.popup import blbPopupWindow, gridPopupWindow, histPopupWindow
 from GUICanvases.microMSModel import MicroMSModel
 from GUICanvases import GUIConstants
 
-class MicroMSQTWindow(QtGui.QMainWindow):
+class MicroMSQTWindow(QtWidgets.QMainWindow):
     '''
     A QT implementation of the MicroMS window.
     Interacts with the MicroMSModel, a SlideCanvas and a HistCanvas
@@ -24,14 +24,14 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         '''
         intialize a new microMSQT window, setting up the layout and some instance variables
         '''
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.main_widget = QtGui.QWidget(self)
+        self.main_widget = QtWidgets.QWidget(self)
 
         #model with slide and blob data
         self.model = MicroMSModel(self)
 
-        self.layout = QtGui.QHBoxLayout(self.main_widget)
+        self.layout = QtWidgets.QHBoxLayout(self.main_widget)
 
         #new slide canvas for displaying the image and handling mouse interactions.
         self.slideCanvas = SlideCanvas(self, self.model, self.main_widget, width=6, height=6, dpi=100)
@@ -65,35 +65,35 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         setup the menubar and connect instance functions
         '''
         #file menu
-        self.file_menu = QtGui.QMenu('&File', self)
+        self.file_menu = QtWidgets.QMenu('&File', self)
         
         #open button
-        openFile = QtGui.QAction(QtGui.QIcon('open.png'), 'Open', self)
+        openFile = QtWidgets.QAction(QtGui.QIcon('open.png'), 'Open', self)
         openFile.setShortcut('Ctrl+O')
         openFile.setStatusTip('Open new File')
         openFile.triggered.connect(self.fileOpen)
         self.file_menu.addAction(openFile)
         
         #decimation submenu
-        decSub = QtGui.QMenu('Decimate...',self)
+        decSub = QtWidgets.QMenu('Decimate...',self)
         self.file_menu.addMenu(decSub)
         decSub.addAction('Single Image', self.decimateImageSingle)
         decSub.addAction('Image Group', self.decimateImageGroup)
         decSub.addAction('Directory', self.decimateDirectory)
         
         #instrument selection
-        instSub = QtGui.QMenu('&Instrument...', self)
+        instSub = QtWidgets.QMenu('&Instrument...', self)
         self.file_menu.addMenu(instSub)
-        self.instruments = QtGui.QActionGroup(self, exclusive=True)
+        self.instruments = QtWidgets.QActionGroup(self, exclusive=True)
         self.instruments.triggered.connect(self.mapperChanged)
         #populate with all instruments currently supported
         for s in supportedCoordSystems.supportedNames:
-            a = self.instruments.addAction(QtGui.QAction(s, instSub, checkable=True))
+            a = self.instruments.addAction(QtWidgets.QAction(s, instSub, checkable=True))
             instSub.addAction(a)
         self.instruments.actions()[0].setChecked(True)
         
         #save submenu
-        saveSub = QtGui.QMenu('&Save...',self)
+        saveSub = QtWidgets.QMenu('&Save...',self)
         self.file_menu.addMenu(saveSub)
         
 
@@ -118,7 +118,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         saveSub.addAction('Save Histogram Values',self.histSaveValues)
         
         #load submenu
-        loadSub = QtGui.QMenu('&Load...',self)
+        loadSub = QtWidgets.QMenu('&Load...',self)
         self.file_menu.addMenu(loadSub)
         
         loadSub.addAction('&Registration', self.loadReg)
@@ -131,7 +131,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.menuBar().addMenu(self.file_menu)
 
         #tools menu
-        self.tools_menu = QtGui.QMenu('&Tools',self)
+        self.tools_menu = QtWidgets.QMenu('&Tools',self)
 
         #blob find
         self.tools_menu.addAction('&Blob Find', self.globalBlob)
@@ -139,7 +139,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.tools_menu.addAction('&Blob Options',self.blbPopup,
                                   QtCore.Qt.CTRL + QtCore.Qt.Key_B)
         #limit drawn blobs toggle
-        self.limitDraw = QtGui.QAction('Limit Drawn Blobs', self.tools_menu, checkable=True)
+        self.limitDraw = QtWidgets.QAction('Limit Drawn Blobs', self.tools_menu, checkable=True)
         self.limitDraw.setChecked(True)
         self.tools_menu.addAction(self.limitDraw)
         self.tools_menu.addSeparator()
@@ -167,7 +167,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.menuBar().addMenu(self.tools_menu)
 
         #device submenu
-        self.inst_menu = QtGui.QMenu('Device', self)
+        self.inst_menu = QtWidgets.QMenu('Device', self)
         self.inst_menu.addAction('Establish Connection', self.initializeInstrument)
         self.inst_menu.addAction('Set Dwell Time', self.setDwell)
         self.inst_menu.addAction('Set Wash Time', self.setWash)
@@ -178,7 +178,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.inst_menu.setEnabled(self.model.coordinateMapper.isConnectedToInstrument)
 
         #help menu
-        self.help_menu = QtGui.QMenu('&Help', self)
+        self.help_menu = QtWidgets.QMenu('&Help', self)
         self.menuBar().addSeparator()
         self.menuBar().addMenu(self.help_menu)
         self.help_menu.addAction('&Image Hotkeys', self.imgHotkeyMsg)
@@ -191,7 +191,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         open and setup a slide.  only ndpi and tif are supported
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getOpenFileName(
+            fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 filter='Slide Scans (*.ndpi *.tif)')  
 
@@ -206,7 +206,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         decimate a tif file (to speed up zooming out) and open the file
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getOpenFileName(
+            fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File to Decimate',
                 filter='Slide Scans (*.tif)') 
 
@@ -225,7 +225,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         decimate a single file and open the image group
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getOpenFileName(
+            fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File to Decimate',
                 filter='Slide Scans (*.tif)') 
 
@@ -245,7 +245,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         decimate a tif file (to speed up zooming out) and open the file
         '''
         if extras is None or not hasattr(extras, 'directory'):
-            directory = QtGui.QFileDialog.getExistingDirectory(self, 'Open Directory to Decimate')
+            directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Open Directory to Decimate')
 
         else:
             directory = extras.directory
@@ -290,7 +290,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             self.statusBar().showMessage("No image to save")
             return
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                         "Select save file",
                                                         self.directory,
                                                         filter='*.png')
@@ -307,7 +307,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Can produce large images!!
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.png')
@@ -318,7 +318,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         if fileName:
             self.model.saveEntirePlot(fileName)
             if extras is None or not hasattr(extras, 'fileName'):
-                msg = QtGui.QMessageBox(self)
+                msg = QtWidgets.QMessageBox(self)
                 msg.setText("Finished saving")
                 msg.setWindowTitle("")
                 msg.exec_()
@@ -330,7 +330,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         -Registration file with pixel to physical locations of fiducials
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text, ok = QtGui.QInputDialog.getText(self,'Save All', 
+            text, ok = QtWidgets.QInputDialog.getText(self,'Save All', 
                                                       'Enter base filename:')
 
         else:
@@ -350,7 +350,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         save just the msreg file
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.msreg')
@@ -368,7 +368,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         save blob finding of the current blob list
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.txt')
@@ -385,7 +385,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         save blob finding of all histogram filters
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.txt')
@@ -402,7 +402,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         save blob finding of all blob lists
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.txt')
@@ -419,7 +419,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         save instrument-specific file for sample positions
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                  "Select save file",
                                                  self.directory,
                                                  filter='*' + self.model.currentInstrumentExtension())
@@ -428,7 +428,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
         if fileName:
             if extras is None or not hasattr(extras, 'fileName'):
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  
                                                         "Input max number of spots  or OK for all " + str(self.model.currentBlobLength()) )
                                 
                 if ok and not text == '':
@@ -440,12 +440,12 @@ class MicroMSQTWindow(QtGui.QMainWindow):
 
                 maxnum = min(self.model.currentBlobLength(), maxnum)
 
-                reply = QtGui.QMessageBox.question(self, 'Run optimization?',
+                reply = QtWidgets.QMessageBox.question(self, 'Run optimization?',
                                                    'Perform TSP optimization?\nNot recommended for over {} targets\nCurrently have {}'.format(
                                                        GUIConstants.TSP_LIMIT, maxnum),
-                                                   buttons = QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
-                                                   defaultButton = QtGui.QMessageBox.Yes if maxnum < GUIConstants.TSP_LIMIT else QtGui.QMessageBox.No)
-                tsp = reply == QtGui.QMessageBox.Yes
+                                                   buttons = QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes,
+                                                   defaultButton = QtWidgets.QMessageBox.Yes if maxnum < GUIConstants.TSP_LIMIT else QtWidgets.QMessageBox.No)
+                tsp = reply == QtWidgets.QMessageBox.Yes
             else:
                 maxnum = extras.maxnum
                 tsp = extras.tsp
@@ -464,7 +464,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         save instrument specific file for fiducial locations to check registration
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                             "Select save file",
                             self.directory,
                             filter='*' + self.model.currentInstrumentExtension())
@@ -482,7 +482,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         sets the instrument and loads pixel and physical positions of fiducials
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getOpenFileName(
+            fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 self.directory,
                 filter='*.msreg')  
@@ -504,7 +504,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         load sample positions and blob finding parameters
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getOpenFileName(
+            fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 self.directory,
                 filter='*.txt')  
@@ -525,7 +525,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         loads samples from an instrument file to display pixel positions
         '''
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getOpenFileName(
+            fileName = QtWidgets.QFileDialog.getOpenFileName(
                 self, 'Open File',
                 self.directory,
                 filter='*' + self.model.currentInstrumentExtension())  
@@ -610,7 +610,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         select the top and bottom X blobs from the histogram
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input number of highest and lowest value blobs to find")
+            text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input number of highest and lowest value blobs to find")
         else:
             text = extras.text
             ok = extras.ok
@@ -626,7 +626,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
             return
 
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                             "Select image file to save",
                             self.directory,
                             filter='*.png')
@@ -646,7 +646,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         if self.showHist == False:
             return
         if extras is None or not hasattr(extras, 'fileName'):
-            fileName = QtGui.QFileDialog.getSaveFileName(self,
+            fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                             "Select save file",
                             self.directory,
                             filter='*.txt')
@@ -678,7 +678,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Performs distance filter of the sample positions and updates histogram display
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input distance filter in pixels")
+            text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input distance filter in pixels")
         else:
             text = extras.text
             ok = extras.ok
@@ -713,23 +713,23 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         if self.model.currentBlobLength() > 0:
             
             if extras is None or not hasattr(extras, 'sep'):
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input separation in pixels" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input separation in pixels" )
                 if ok: 
                     sep = int(text)
                 else:
                     sep = 50
                 
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input number of layers" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input number of layers" )
                 if ok: 
                     layers = int(text)
                 else:
                     layers = 1
 
-                dynamicLayering = QtGui.QMessageBox.question(self, 'Input Required', 
+                dynamicLayering = QtWidgets.QMessageBox.question(self, 'Input Required', 
                                                              'Adjust layering to blob size?',
-                                                             QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                                                             QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
-                if dynamicLayering == QtGui.QMessageBox.Yes:
+                if dynamicLayering == QtWidgets.QMessageBox.Yes:
                     dynamicLayering = True
                 else:
                     dynamicLayering = False
@@ -751,23 +751,23 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         '''
         if self.model.currentBlobLength() > 0:
             if extras is None or not hasattr(extras, 'sep'):
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input separation in pixels" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input separation in pixels" )
                 if ok: 
                     sep = int(text)
                 else:
                     sep = 50
                 
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input number of layers" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input number of layers" )
                 if ok: 
                     layers = int(text)
                 else:
                     layers = 1
 
-                dynamicLayering = QtGui.QMessageBox.question(self, 'Input Required', 
+                dynamicLayering = QtWidgets.QMessageBox.question(self, 'Input Required', 
                                                              'Adjust layering to blob size?',
-                                                             QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                                                             QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
-                if dynamicLayering == QtGui.QMessageBox.Yes:
+                if dynamicLayering == QtWidgets.QMessageBox.Yes:
                     dynamicLayering = True
                 else:
                     dynamicLayering = False
@@ -789,19 +789,19 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         '''
         if self.model.currentBlobLength() > 0:
             if extras is None or not hasattr(extras, 'sep'):
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input minimum separation in pixels" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input minimum separation in pixels" )
                 if ok: 
                     sep = int(text)
                 else:
                     sep = 50
                 
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input max number of spots" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input max number of spots" )
                 if ok: 
                     shots = int(text)
                 else:
                     shots = 10
                                 
-                text,ok = QtGui.QInputDialog.getText(self, "Input Required",  "Input offset in pixels" )
+                text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  "Input offset in pixels" )
                 if ok: 
                     offset = int(text)
                 else:
@@ -830,7 +830,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Initialize instrument on the user specified COM port
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text,ok = QtGui.QInputDialog.getText(self, "Enter COM Port",  
+            text,ok = QtWidgets.QInputDialog.getText(self, "Enter COM Port",  
                                                  "Connections at {}".format(self.model.coordinateMapper.connectedInstrument.findPorts())
                                                  )    
         else:
@@ -849,7 +849,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Set the dwell time for analysis with a connected instrument
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  
+            text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  
                                                  "Set dwell time (s)"
                                                  )   
         else:
@@ -867,7 +867,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Set the dwell time for analysis with a connected instrument
         '''
         if extras is None or not hasattr(extras, 'text'):
-            text,ok = QtGui.QInputDialog.getText(self, "Input Required",  
+            text,ok = QtWidgets.QInputDialog.getText(self, "Input Required",  
                                                  "Set wash time (s), -1 for continuous"
                                                  )   
         else:
@@ -893,11 +893,11 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         self.slideCanvas.draw()
         
     def createMessageBox(self, message, title):
-        msg = QtGui.QMessageBox(self)
+        msg = QtWidgets.QMessageBox(self)
         msg.setWindowIcon(self.windowIcon())
         msg.setText(message)
         msg.setWindowTitle(title)
-        msg.setStandardButtons(QtGui.QMessageBox.Ok)
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg.setModal(False)
         return msg
     
@@ -1008,7 +1008,7 @@ class MicroMSQTWindow(QtGui.QMainWindow):
                     #set global blobs to the multiblob specified
                     if event.modifiers() & QtCore.Qt.AltModifier:
                         self.model.setCurrentBlobs(i)
-                        self.statusBar().showMessage('Picking blobs into list #{}'.format(i+1))
+                        self.statusBar().showMessage('Picking blobs into list #{}, contains {} blobs'.format(i+1, self.model.currentBlobLength()))
                         if self.showHist:
                             self.histCanvas.calculateHist()
                     #switch to image channel i
@@ -1129,6 +1129,6 @@ class MicroMSQTWindow(QtGui.QMainWindow):
         Method for microMSModel to recieve input from the user
         defaultStr: the string to initially display to the user
         '''
-        return QtGui.QInputDialog.getText(self,'Coordinate Dialog', 
+        return QtWidgets.QInputDialog.getText(self,'Coordinate Dialog', 
                                                     'Enter plate coordinate:',
                                                     text=defaultStr)

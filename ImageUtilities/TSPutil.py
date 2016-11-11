@@ -28,8 +28,8 @@ def TSPRoute(inlist, optT1 = 30, optT2 = 60):
     #map the i,j values of a square form matrix to the flat form returned by pdist
     def sqr(i,j,n=dat.shape[0]):
         if i < j:
-            return n*i-(i+1)*i/2 + (j-i-1)
-        return n*j-(j+1)*j/2 + (i-j-1)
+            return int(n*i-(i+1)*i/2 + (j-i-1))
+        return int(n*j-(j+1)*j/2 + (i-j-1))
         
     #nearest neighbor traversal
     bestDist = float("inf")

@@ -7,7 +7,7 @@ GUI for performing automatic cell finding and point based registration from whol
 microMS is a Python script written for [python 3](https://www.python.org/) >= 3.4.  After downloading all packages, no installation is required.
 
 In addition to base components the following packages are required:
-- [PyQt4](https://www.riverbankcomputing.com/software/pyqt/download)
+- [PyQt5](https://www.riverbankcomputing.com/software/pyqt/download5)
 - [NumPy](http://www.numpy.org/)
 - [SciPy](https://www.scipy.org/)
 - [matplotlib](http://matplotlib.org/)

@@ -220,7 +220,7 @@ class blobList(object):
         points = np.array([ (b.X,b.Y) for b in self.blobs])
         if points.size == 0:
             return self.partialDeepCopy([])
-        result = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(roi.contains_points(points))])
+        result = self.partialDeepCopy([self.blobs[i] for i in np.where(roi.contains_points(points))[0]])
         return result
 
     def distanceFilter(self, dist, subblocks = None, verbose = False):
@@ -271,7 +271,7 @@ class blobList(object):
         #report to console
         if verbose: print("Done! {} blobs within {} pixels, {} remaining".format(count, dist, len(result) - count))
         
-        newList = self.partialDeepCopy([self.blobs[i] for i in np.argwhere(~np.array(result))])
+        newList = self.partialDeepCopy([self.blobs[i] for i in np.where(~np.array(result))[0]])
         newList.filters.append("distance > {}".format(dist))
         return newList
 
@@ -287,7 +287,7 @@ class blobList(object):
         #number of points
         n = len(locs)
         #map between square form of row i, column j, and the row vector from pdist
-        q = lambda i,j,n: n*j - j*(j+1)/2+i-1-j
+        q = lambda i,j,n: int(n*j - j*(j+1)/2+i-1-j)
         #initialize result
         result = [False] * n
         #calculate euclidean distance
@@ -362,7 +362,7 @@ class blobList(object):
         #get number of points
         n = len(locs)
         #lambda function to convert index in square and row form
-        q = lambda i,j,n: n*j - j*(j+1)/2+i-1-j
+        q = lambda i,j,n: int(n*j - j*(j+1)/2+i-1-j)
         #initialize result
         result = [float("inf")] * n
         #calculate euclidean distance between each point
