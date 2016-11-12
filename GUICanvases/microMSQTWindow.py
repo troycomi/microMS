@@ -294,6 +294,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                         "Select save file",
                                                         self.directory,
                                                         filter='*.png')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
 
         else:
             fileName = extras.fileName
@@ -311,6 +314,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.png')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
 
         else:
             fileName = extras.fileName
@@ -354,6 +360,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.msreg')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
 
         else:
             fileName = extras.fileName
@@ -372,6 +381,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.txt')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
@@ -389,6 +401,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.txt')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
@@ -406,6 +421,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                      "Select save file",
                                                      self.directory,
                                                      filter='*.txt')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
@@ -423,6 +441,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                                  "Select save file",
                                                  self.directory,
                                                  filter='*' + self.model.currentInstrumentExtension())
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
@@ -468,6 +489,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                             "Select save file",
                             self.directory,
                             filter='*' + self.model.currentInstrumentExtension())
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
@@ -630,6 +654,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                             "Select image file to save",
                             self.directory,
                             filter='*.png')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
@@ -650,6 +677,9 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                             "Select save file",
                             self.directory,
                             filter='*.txt')
+            f = os.path.splitext(fileName[0])[0]
+            ex = os.path.splitext(fileName[1])[1]
+            fileName = f+ex
         else:
             fileName = extras.fileName
 
