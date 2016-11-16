@@ -186,10 +186,10 @@ class histPopupWindow(QtWidgets.QDialog):
 
         #add to vbox layout with labels
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(QtWidgets.QLabel("Image Channel",self)) 
-        vbox.addWidget(self.imgInd)
         vbox.addWidget(QtWidgets.QLabel("Color or Morphology",self)) 
         vbox.addWidget(self.channel)
+        vbox.addWidget(QtWidgets.QLabel("Image Channel",self)) 
+        vbox.addWidget(self.imgInd)
         vbox.addWidget(QtWidgets.QLabel("Offset (pixels)",self)) 
         vbox.addWidget(self.offset)
         vbox.addWidget(self.max)
