@@ -156,7 +156,7 @@ class blobList(object):
             if len(self.blobs) != 0:
                 roi = Path(self.ROI)
                 points = np.array([ (b.X,b.Y) for b in self.blobs])
-                self.blobs = [self.blobs[i] for i in np.argwhere(roi.contains_points(points))]
+                self.blobs = [self.blobs[i] for i in np.where(roi.contains_points(points))[0]]
             return "Finished blob finding in ROI, found {} blobs".format(len(self.blobs))
 
     def getROI(self, point, distCutoff):

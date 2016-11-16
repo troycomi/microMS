@@ -150,7 +150,7 @@ class SlideWrapper(object):
         '''
         #have to convert the position to keep self.pos at the center
         #read_region take the top left point
-        tempPos = list(map(lambda x, y: round(x-y*2**(self.lvl-1)), 
+        tempPos = list(map(lambda x, y: int(x-y*2**(self.lvl-1)), 
                    self.pos, self.size))
         #if zoom level is in bounds for openslide
         if self.lvl < self.level_count:
@@ -161,23 +161,23 @@ class SlideWrapper(object):
         else:         
             #read in larger area and resize down to desired size
             if self.lvl - self.level_count < 2:
-                tempPos = list(map(lambda x, y: round(x-y*2**(self.lvl-1)), 
+                tempPos = list(map(lambda x, y: int(x-y*2**(self.lvl-1)), 
                    self.pos, self.size))
-                tempSize = list(map(lambda x: round(x*2**(self.lvl-self.level_count+1)), self.size))
+                tempSize = list(map(lambda x: int(x*2**(self.lvl-self.level_count+1)), self.size))
                 return self.slides[imageInd][0].read_region(tempPos, self.level_count-1, tempSize).resize(self.size)
                 
             #same as above, but with 8x decimated image
             elif self.lvl - self.level_count < 5 and len(self.slides[imageInd]) > 1:
                 tempPos[0] //= 8
                 tempPos[1] //= 8
-                tempSize = list(map(lambda x: round(x*2**(self.lvl-3)), self.size))
+                tempSize = list(map(lambda x: int(x*2**(self.lvl-3)), self.size))
                 return self.slides[imageInd][1].read_region(tempPos, 0, tempSize).resize(self.size)
             
             #same as above, but with 64x decimated image
             elif  len(self.slides[imageInd]) > 2 and self.lvl-self.level_count < 8: 
                 tempPos[0] //= 64
                 tempPos[1] //= 64
-                tempSize = list(map(lambda x: round(x*2**(self.lvl-6)), self.size))
+                tempSize = list(map(lambda x: int(x*2**(self.lvl-6)), self.size))
                 return self.slides[imageInd][2].read_region(tempPos, 0, tempSize).resize(self.size)
 
             #zoom is outside of bounds for this channel
@@ -198,7 +198,7 @@ class SlideWrapper(object):
             size = self.size
         for p in positions: 
             imgInd = min(len(self.slides), imgInd)
-            tempPos = list(map(lambda x, y: round(x-y/2), p, size))
+            tempPos = list(map(lambda x, y: int(x-y/2), p, size))
             if invert:
                 fp = os.path.join(baseDir, "{}{}_{}_inv.png".format(prefix,p[0], p[1]))
                 img = self.slides[imgInd][0].read_region(tempPos, 0, size)
@@ -220,7 +220,7 @@ class SlideWrapper(object):
             position = self.pos
         if size is None:
             size = self.size
-        tempPos = list(map(lambda x, y: round(x-y/2), 
+        tempPos = list(map(lambda x, y: int(x-y/2), 
                             position, size))
         return (self.slides[imgInd][0]).read_region(tempPos, 0, size)
         
