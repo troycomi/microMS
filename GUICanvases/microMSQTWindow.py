@@ -114,8 +114,8 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         saveSub.addAction('&Whole Image', self.saveWholeImg)
 
         saveSub.addSeparator()
-        saveSub.addAction('Histogram Image',self.histSaveImage)
-        saveSub.addAction('Histogram Values',self.histSaveValues)
+        saveSub.addAction('Save Histogram Image',self.histSaveImage)
+        saveSub.addAction('Save Histogram Values',self.histSaveValues)
         
         #load submenu
         loadSub = QtWidgets.QMenu('&Load...',self)
