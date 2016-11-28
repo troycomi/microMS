@@ -262,6 +262,7 @@ class MicroMSModel(object):
         '''
         self.blobCollection[self.currentBlobs].blobs = \
             self.coordinateMapper.loadInstrumentFile(filename)
+        self.blobCollection[self.currentBlobs].generateGroupLabels()
         return "Finished loading instrument file"
 
     def currentBlobLength(self):
