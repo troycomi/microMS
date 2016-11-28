@@ -1,6 +1,6 @@
 import serial, struct, abc
  
-class ZaberIterface(object, metaclass=abc.ABCMeta):
+class ZaberInterface(object, metaclass=abc.ABCMeta):
     '''
     An abstract base class for interacting with zaber linear stages
     Encodes methods for basic IO with a stage

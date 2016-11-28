@@ -3,7 +3,7 @@ from CoordinateMappers import connectedInstrument
 from ImageUtilities.enumModule import Direction, StepSize
 import time
 
-class Zaber3Axis(zaberInterface.ZaberIterface, 
+class Zaber3Axis(zaberInterface.ZaberInterface, 
                  connectedInstrument.ConnectedInstrument):
     '''
     A connected zaber linear stage with XYZ axes.
