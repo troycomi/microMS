@@ -23,7 +23,7 @@ MULTI_BLOB              =   ['lime', 'salmon', 'skyBlue', 'orangeRed',
 #text display of grouped targets from expanding blobs
 EXPANDED_TEXT          =   'purple'
 #default blob radius in pixels
-DEFAULT_RADIUS          =   8
+DEFAULT_RADIUS          =   8#363
 #default fiducial radius in pixels
 FIDUCIAL_RADIUS         =   100
 #maximum number of blobs to draw when limit is selected
