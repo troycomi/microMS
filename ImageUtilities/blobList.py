@@ -159,14 +159,14 @@ class blobList(object):
                 self.blobs = [self.blobs[i] for i in np.where(roi.contains_points(points))[0]]
             return "Finished blob finding in ROI, found {} blobs".format(len(self.blobs))
 
-    def getROI(self, point, distCutoff):
+    def getROI(self, point, distCutoff, append = False):
         '''
         Performs checks and additions to interacting with an ROI. Does not alter ROI
         point: global point to check
         returns a new list of tuples of the ROI
         '''
         result = self.ROI.copy()
-        if point is not None and len(self.ROI) > 2:
+        if point is not None and len(self.ROI) > 2 and append == False:
             #find distances between point and ROI
             dists = pdist([point] + result)[:len(result)]
             #remove first point with dist <= ROI_DIST
@@ -221,6 +221,16 @@ class blobList(object):
         if points.size == 0:
             return self.partialDeepCopy([])
         result = self.partialDeepCopy([self.blobs[i] for i in np.where(roi.contains_points(points))[0]])
+        return result
+
+    def roiFilterInverse(self):
+        if len(self.ROI) < 3:
+            return deepcopy(self)
+        roi = Path(self.ROI)
+        points = np.array([ (b.X,b.Y) for b in self.blobs])
+        if points.size == 0:
+            return self.partialDeepCopy([])
+        result = self.partialDeepCopy([self.blobs[i] for i in np.where(np.logical_not(roi.contains_points(points)))[0]])
         return result
 
     def distanceFilter(self, dist, subblocks = None, verbose = False):

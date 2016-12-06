@@ -462,7 +462,7 @@ class HistCanvas(MplCanvas):
             #draw lines displaying the values used for filtering
             #a single blob to highlight
             if self.singleBlob is not None:
-                if self.singleBlob > 0 and self.singleBlob < len(self.populationValues):
+                if self.singleBlob >= 0 and self.singleBlob < len(self.populationValues):
                     self.axes.vlines(self.populationValues[self.singleBlob], 0, 
                                      self.axes.get_ylim()[1], colors = GUIConstants.SINGLE_BLOB)
             #draw limits

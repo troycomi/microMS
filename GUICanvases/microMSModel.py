@@ -320,6 +320,16 @@ class MicroMSModel(object):
         endLen = self.currentBlobLength()
         return "{} blobs removed, {} remain".format(startLen - endLen, endLen)
 
+    def roiFilterInverse(self):
+        if self.currentBlobLength() == 0:
+            return "No blobs to filter"
+        if len(self.blobCollection[self.currentBlobs].ROI) < 3:
+            return "No ROI selected"
+        startLen = self.currentBlobLength()
+        self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].roiFilterInverse())
+        endLen = self.currentBlobLength()
+        return "{} blobs removed, {} remain".format(startLen - endLen, endLen)
+
 
     def hexPackBlobs(self, separation, layers, dynamicLayering = False):
         '''
@@ -519,9 +529,9 @@ class MicroMSModel(object):
         #return list of patches as a patch collection, if none match_original must be false
         return PatchCollection(ptches, match_original=(len(ptches) != 0))
 
-    def getROIPatches(self, newPoint = None):
+    def getROIPatches(self, newPoint = None, append = False):
         ptches = []
-        tROI = self.blobCollection[self.currentBlobs].getROI(newPoint, GUIConstants.ROI_DIST *2**self.slide.lvl)
+        tROI = self.blobCollection[self.currentBlobs].getROI(newPoint, GUIConstants.ROI_DIST *2**self.slide.lvl, append)
 
         if len(tROI) > 1:
             verts = []
@@ -534,13 +544,15 @@ class MicroMSModel(object):
 
         return ptches
 
-    def reportROI(self, point):
+    def reportROI(self, point, append = False):
         '''
         Handles ROI additions and removals based on position
         point: the point in global coordinates
         '''
         self.blobCollection[self.currentBlobs].ROI = \
-            self.blobCollection[self.currentBlobs].getROI(point, GUIConstants.ROI_DIST *2**self.slide.lvl)
+            self.blobCollection[self.currentBlobs].getROI(point, 
+                                                          GUIConstants.ROI_DIST *2**self.slide.lvl,
+                                                          append)
 
     def drawLabels(self, axes):
         '''
