@@ -153,7 +153,8 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         #blob position options
         self.tools_menu.addSeparator()
         self.tools_menu.addAction('Distance Filter',self.distanceFilter)
-        self.tools_menu.addAction('ROI Filter',self.roiFilter)
+        self.tools_menu.addAction('ROI Filter Retain',self.roiFilter)
+        self.tools_menu.addAction('ROI Filter Remove',self.roiFilterInverse)
         self.tools_menu.addSeparator()
         self.tools_menu.addAction('Rectangular Pack', self.rectPack)
         self.tools_menu.addAction('Hexagonal Pack', self.hexPack)
@@ -730,6 +731,17 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         '''
         self.statusBar().showMessage(
             self.model.roiFilter()
+            )
+        if self.showHist:
+            self.histCanvas.calculateHist()
+        self.slideCanvas.draw()
+
+    def roiFilterInverse(self):
+        '''
+        Performs filtering of blobs falling within the ROI
+        '''
+        self.statusBar().showMessage(
+            self.model.roiFilterInverse()
             )
         if self.showHist:
             self.histCanvas.calculateHist()

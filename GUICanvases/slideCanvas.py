@@ -143,6 +143,13 @@ class SlideCanvas(MplCanvas):
                 self.model.reportROI(self.model.slide.getGlobalPoint(
                                     (event.xdata, event.ydata)))
 
+            #control + shift + LMB to append ROI point
+            elif modifiers & QtCore.Qt.ShiftModifier and \
+                modifiers & QtCore.Qt.ControlModifier:
+                self.model.reportROI(self.model.slide.getGlobalPoint(
+                                    (event.xdata, event.ydata)),
+                                     append = True)
+
             #alt + LMB to move connected instrument to specified position
             elif modifiers == QtCore.Qt.AltModifier:
                 self.master.reportFromModel(
@@ -237,6 +244,11 @@ class SlideCanvas(MplCanvas):
             self.redrawROI((event.xdata, event.ydata))
             self.mMoveROI = True
 
+        elif modifiers & QtCore.Qt.ShiftModifier and \
+                modifiers & QtCore.Qt.ControlModifier:
+            self.redrawROI((event.xdata, event.ydata), append = True)
+            self.mMoveROI = True
+
         elif self.mMoveROI == True:
             self.mMoveROI = False
             self.draw()
@@ -268,14 +280,14 @@ class SlideCanvas(MplCanvas):
         #reset temporary blobs and update
         self.draw()
 
-    def redrawROI(self, pnt):
+    def redrawROI(self, pnt, append = False):
         '''
         helper method to draw ROI polygon during mouse movement
         pnt: the current point in local (image) coordinates
         '''
         if self.tempIm is not None:
             self.axes.imshow(self.tempIm)
-            roi = self.model.getROIPatches(self.model.slide.getGlobalPoint(pnt))
+            roi = self.model.getROIPatches(self.model.slide.getGlobalPoint(pnt), append)
             self.axes.add_collection(PatchCollection(roi, match_original=(len(roi) != 0)))
             if self.model.mirrorImage:
                 self.axes.invert_xaxis()
