@@ -23,6 +23,7 @@ python microMS.py
 On Windows, microMS.bat can launch the GUI as well.
 
 ##Usage
+See the [user guide](UserGuideD2.pdf) for full documentation.
 
 ##About
 The main GUI class is composed of widgets in the GUICanvas package for displaying a microscope image and population level statistics as a histogram.  Each widget interacts with microMSModel object, representing a microscopy experiment, a mass spectrometer system, and their interacting data.  
