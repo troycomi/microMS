@@ -35,8 +35,8 @@ class MicroMSModel(object):
         '''
         self.slide = None
         self.coordinateMapper = supportedCoordSystems.supportedMappers[0]
-        self.resetVariables()
         self.GUI = GUI
+        self.resetVariables()
 
     def setupMicroMS(self, filename):
         '''
@@ -52,7 +52,7 @@ class MicroMSModel(object):
         '''
         self.blobCollection = [blobList.blobList(self.slide) for i in range(10)]
 
-        self.currentBlobs = 0
+        self.setCurrentBlobs(0)
         self.tempBlobs = None
         self.histogramBlobs = None
         self.histColors = None
@@ -129,7 +129,7 @@ class MicroMSModel(object):
             return "List {} contains no blobs!".format(self.currentBlobs +1) #plus one for GUI display
         #save blobs
         self.blobCollection[self.currentBlobs].saveBlobs(filename)
-        return "Saved blob information"
+        return "Saved blob information of list {}".format(self.currentBlobs+1)
 
     def saveHistogramBlobs(self, filename):
         '''
@@ -252,7 +252,7 @@ class MicroMSModel(object):
         filename: file to load
         '''
         self.blobCollection[self.currentBlobs].loadBlobs(filename)
-        return "Finished loading blob positions"
+        return "Finished loading blob positions into list {}".format(self.currentBlobs+1)
 
     def loadInstrumentPositions(self, filename):
         '''
@@ -263,7 +263,7 @@ class MicroMSModel(object):
         self.blobCollection[self.currentBlobs].blobs = \
             self.coordinateMapper.loadInstrumentFile(filename)
         self.blobCollection[self.currentBlobs].generateGroupLabels()
-        return "Finished loading instrument file"
+        return "Finished loading instrument file into list {}".format(self.currentBlobs+1)
 
     def currentBlobLength(self):
         '''
@@ -283,7 +283,7 @@ class MicroMSModel(object):
         '''
         if self.slide is None:
             return "No slide was open"
-        return self.blobCollection[self.currentBlobs].blobSlide()
+        return self.blobCollection[self.currentBlobs].blobSlide() + " in list {}".format(self.currentBlobs+1)
 
     def updateCurrentBlobs(self, newBlobs):
         if not isinstance(newBlobs, blobList.blobList):
@@ -294,7 +294,7 @@ class MicroMSModel(object):
             if self.blobCollection[i].length() == 0:
                 #add new blobs
                 self.blobCollection[i] = newBlobs
-                self.currentBlobs = i
+                self.setCurrentBlobs(i)
                 return
 
     def distanceFilter(self, distance):
@@ -308,7 +308,7 @@ class MicroMSModel(object):
         
         self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].distanceFilter(distance, verbose = True))
 
-        return "Finished distance filter"
+        return "Finished distance filter in list {}".format(self.currentBlobs+1)
 
     def roiFilter(self):
         if self.currentBlobLength() == 0:
@@ -318,7 +318,7 @@ class MicroMSModel(object):
         startLen = self.currentBlobLength()
         self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].roiFilter())
         endLen = self.currentBlobLength()
-        return "{} blobs removed, {} remain".format(startLen - endLen, endLen)
+        return "{} blobs removed, {} remain in list {}".format(startLen - endLen, endLen, self.currentBlobs+1)
 
     def roiFilterInverse(self):
         if self.currentBlobLength() == 0:
@@ -328,7 +328,7 @@ class MicroMSModel(object):
         startLen = self.currentBlobLength()
         self.updateCurrentBlobs(self.blobCollection[self.currentBlobs].roiFilterInverse())
         endLen = self.currentBlobLength()
-        return "{} blobs removed, {} remain".format(startLen - endLen, endLen)
+        return "{} blobs removed, {} remain in list {}".format(startLen - endLen, endLen, self.currentBlobs+1)
 
 
     def hexPackBlobs(self, separation, layers, dynamicLayering = False):
@@ -424,6 +424,8 @@ class MicroMSModel(object):
         ind: integer value of list to show
         '''
         self.currentBlobs = ind
+        if self.GUI is not None:
+            self.GUI.setTitle(self.currentBlobs)
 
     def reportSize(self, newSize):
         '''

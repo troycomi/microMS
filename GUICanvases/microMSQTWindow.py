@@ -27,6 +27,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.main_widget = QtWidgets.QWidget(self)
+        self.fileName = None
 
         #model with slide and blob data
         self.model = MicroMSModel(self)
@@ -44,7 +45,6 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         
         self.showHist = False
 
-        self.fileName = None
         
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
@@ -264,7 +264,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage("Opened {}".format(fileName))
         self.directory = os.path.dirname(fileName)
         self.fileName = os.path.splitext(os.path.basename(fileName))[0]
-        self.setWindowTitle('MicroMS: ' + self.fileName)
+        self.setTitle(self.model.currentBlobs)
         self.showHist = False
         self.histCanvas.resetVariables(True, True)
         self.histCanvas.hide()
@@ -272,6 +272,13 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
                                float(self.slideCanvas.size().height())))
         self.model.slide.resetView()
         self.slideCanvas.draw()
+
+    def setTitle(self, blobList):
+        if self.fileName is not None:
+            self.setWindowTitle('MicroMS: {}    (List #{})'.format(self.fileName, blobList+1))
+        else:
+            self.setWindowTitle('MicroMS')
+
 
     def mapperChanged(self, action):
         '''
@@ -612,6 +619,8 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         '''
         self.showHist = not self.showHist
         if self.showHist:
+            #reset histogram to default values
+            self.histCanvas.resetVariables(resetBlobs=True)
             self.histCanvas.show()
             self.histCanvas.calculateHist()
         else:
@@ -700,7 +709,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         else:
             for blbs in filt:
                 self.model.updateCurrentBlobs(blbs)
-            self.statusBar().showMessage('Applied {} filters'.format(len(filt)))
+            self.statusBar().showMessage('Applied {} filter'.format(len(filt)))
             self.histCanvas.calculateHist()
             self.slideCanvas.draw()
 
