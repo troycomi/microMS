@@ -69,7 +69,7 @@ class solarixMapper(brukerMapper.brukerMapper):
         '''
         if blobs is None or len(blobs) == 0:
             return
-        maxPoints = 900
+        maxPoints = 400
         if len(blobs) > maxPoints:
             fn = filename[:-4]
             for i in range(len(blobs) // maxPoints):

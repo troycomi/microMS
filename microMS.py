@@ -1,3 +1,6 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import sys
 import ctypes
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -11,9 +14,10 @@ def main():
     qApp = QtWidgets.QApplication(sys.argv) 
 
     #set up icon
-    myappid = 'uiuc.sweedlerlab.microms.v1'
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    qApp.setWindowIcon(QtGui.QIcon(r'GUICanvases\Icon\icon_sm.png'))
+    if sys.platform == 'win32':
+        myappid = 'uiuc.sweedlerlab.microms.v1'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    qApp.setWindowIcon(QtGui.QIcon(r'GUICanvases/Icon/icon_sm.png'))
     
     #start application
     aw = MicroMSQTWindow()
