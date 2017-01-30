@@ -620,7 +620,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         self.showHist = not self.showHist
         if self.showHist:
             #reset histogram to default values
-            self.histCanvas.resetVariables(resetBlobs=True)
+            self.histCanvas.resetVariables(True, True)
             self.histCanvas.show()
             self.histCanvas.calculateHist()
         else:

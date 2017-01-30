@@ -300,7 +300,7 @@ class HistCanvas(MplCanvas):
         Saves the current histogram image
         filename: image file to write
         '''
-        self.fig.savefig(filename)
+        self.fig.savefig(filename, dpi = 1200)
 
     def getFilteredBlobs(self):
         '''
@@ -484,13 +484,13 @@ class HistCanvas(MplCanvas):
         #update the axes labels and x axis limits
         self.axes.set_ylabel('Count')
         if self.populationMetric == 3:
-            self.axes.set_xlabel('Size')
+            self.axes.set_xlabel('Size (pixels)')
             self.xlo, self.xhi = self.axes.get_xlim()
         elif self.populationMetric == 4:
             self.axes.set_xlabel('Circularity')
             self.xlo, self.xhi = self.axes.get_xlim()
         elif self.populationMetric == 5:
-            self.axes.set_xlabel('Distance')
+            self.axes.set_xlabel('Distance (pixels)')
             self.xlo, self.xhi = self.axes.get_xlim()
 
         #colors are labeled as intensity and limited to 0,255 

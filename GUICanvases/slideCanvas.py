@@ -335,5 +335,5 @@ class SlideCanvas(MplCanvas):
         saves the current figure
         fileName: the file to write to
         '''
-        self.fig.savefig(fileName)
+        self.fig.savefig(fileName, dpi = 1200)
             
