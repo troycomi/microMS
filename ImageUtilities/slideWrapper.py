@@ -133,7 +133,7 @@ class SlideWrapper(object):
 
         #merge bright and fluroescence image, or return one of them
         if brightImg is None and fluorImg is None:
-            slideImg = Image.new("RGB",self.size,"black")
+            slideImg = Image.new("RGBA",self.size,"black")
         elif brightImg is not None and fluorImg is None:
             slideImg = brightImg
         elif fluorImg is not None and brightImg is None:
