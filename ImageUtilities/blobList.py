@@ -243,7 +243,7 @@ class blobList(object):
 
         blobs: list of blobs
         dist: the distance cutoff
-        subblocks: specify the number of sublocks to divide the area into.
+        subblocks: specify the number of subblocks to divide the area into.
             Divides the x and y into subblocks sections
             = None allows the function to dynamically determine number of subblocks 
         verbose: set if output message is printed to console
@@ -349,7 +349,7 @@ class blobList(object):
                     locs[ii,1] = self.blobs[v].Y
                 #calculate distances
                 dists = blobList._minDists(locs)
-                #recorde minimum of the reported distance and previous value
+                #record minimum of the reported distance and previous value
                 for k, d in enumerate(dists):
                     result[subLocs[i][j][k]] = min(result[subLocs[i][j][k]], d)
         

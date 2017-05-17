@@ -34,7 +34,7 @@ class SlideCanvas(MplCanvas):
         '''
         MplCanvas.__init__(self, *args, **kwargs)
 
-        #modify display defualts
+        #modify display defaults
         self.axes.xaxis.set_visible(False)
         self.axes.yaxis.set_visible(False)
         self.axes.set_axis_bgcolor(GUIConstants.IMAGE_BACKGROUND)
@@ -62,7 +62,7 @@ class SlideCanvas(MplCanvas):
 
     def compute_initial_figure(self):
         '''
-        Draw the intitial image shown before anything is loaded.
+        Draw the initial image shown before anything is loaded.
         Shows a high res version of the icon image
         '''
         tdir,f = os.path.split(__file__)
@@ -115,7 +115,7 @@ class SlideCanvas(MplCanvas):
             #remove or add global blob with shift click
             if modifiers == QtCore.Qt.ShiftModifier:
 
-                #check if gobal blbs exists, if any points are within click
+                #check if global blbs exists, if any points are within click
                 globalPnt = self.model.slide.getGlobalPoint((event.xdata, event.ydata))
                 
                 #if shift click and drag, add blob with specified radius
@@ -262,7 +262,7 @@ class SlideCanvas(MplCanvas):
     def mouseZoom(self,event):
         '''
         handle scroll wheel movement, which zooms the slide in and out
-        event: an mple mouse wheel event
+        event: an mpl mouse wheel event
         '''
         if event.xdata is None or event.ydata is None:
             return

@@ -60,7 +60,7 @@ class HistCanvas(MplCanvas):
         '''
         reset variables related to splitting the population and display
         resetZoom: reset the zoom on the x axis
-        resetBlobs: reset the list of blobs curretly investigated
+        resetBlobs: reset the list of blobs currently investigated
         '''
         #lowIntens and lowLimit hold thresholds for low values of the population
         #low blobs have I such that lowLimit < I < lowIntens
@@ -283,7 +283,7 @@ class HistCanvas(MplCanvas):
 
     def savePopulationValues(self, filename):
         '''
-        saves the mopulation values of the currently displayed histogram
+        saves the population values of the currently displayed histogram
         filename: text file to save
         '''
         if self.populationValues is None or len(self.populationValues) == 0:
@@ -334,7 +334,7 @@ class HistCanvas(MplCanvas):
 
     def _getFilterDescription(self, lowVal, highVal):
         '''
-        returns a succienct string description of the current filter set
+        returns a succinct string description of the current filter set
         lowVal: low value, part of # < channel < #
         highVal: high value, other part of # < channel < #
         '''

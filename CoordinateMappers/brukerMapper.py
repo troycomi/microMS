@@ -313,7 +313,7 @@ class brukerMapper(coordinateMapper.CoordinateMapper, metaclass=abc.ABCMeta):
     
     def loadStagePoints(self):
         '''
-        loads in the intermeidate map at self.motorCoordFilename
+        loads in the intermediate map at self.motorCoordFilename
         '''
         #read in data file
         reader = open(self.motorCoordFilename, 'r')

@@ -196,7 +196,7 @@ class MicroMSModel(object):
         blobs = self.blobCollection[self.currentBlobs].blobs
         #if maxPoints is valid
         if maxPoints is not None and maxPoints > 0 and maxPoints < self.currentBlobLength():
-            #obtain a randome sample of blobs
+            #obtain a random sample of blobs
             blobs = random.sample(blobs,maxPoints)
                          
         #if tspOpt is requested       
@@ -248,7 +248,7 @@ class MicroMSModel(object):
 
     def loadBlobFinding(self, filename):
         '''
-        Loads the blobs in the provided filename to the current list of blobs and sets the blobfinder to the preivous values
+        Loads the blobs in the provided filename to the current list of blobs and sets the blobfinder to the previous values
         filename: file to load
         '''
         self.blobCollection[self.currentBlobs].loadBlobs(filename)
@@ -669,7 +669,7 @@ class MicroMSModel(object):
         handles a fiducial request.
         localpoint: (x,y) tuple in the image coordinate system
         removePoint: boolean toggle.  If true, the closest fiducial is removed
-        extras: a debuging object to bypass GUI display. Must define text and ok
+        extras: a debugging object to bypass GUI display. Must define text and ok
         '''
         #no slide to register against
         if self.slide is None:
@@ -732,7 +732,7 @@ class MicroMSModel(object):
 
     def requestInstrumentMove(self, localPoint):
         '''
-        Handles requests for moving the connected istrument
+        Handles requests for moving the connected instrument
         localPoint: (x,y) tuple in the current image coordinate system
         returns a string summarizing the effect of the action
         '''

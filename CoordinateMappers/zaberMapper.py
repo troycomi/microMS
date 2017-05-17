@@ -88,7 +88,7 @@ class zaberMapper(coordinateMapper.CoordinateMapper):
 
     def loadInstrumentFile(self, filename):
         '''
-        Loads a zaberMapper instrument file and returs a list of blobs
+        Loads a zaberMapper instrument file and returns a list of blobs
         with the target locations.
         filename: the file to load
         returns a list of blob objects
@@ -125,7 +125,7 @@ class zaberMapper(coordinateMapper.CoordinateMapper):
     
     def getIntermediateMap(self):
         '''
-        This is ignored as no intermeidate map is required
+        This is ignored as no intermediate map is required
         '''
         return [('Not in use', 0, 0)]
 

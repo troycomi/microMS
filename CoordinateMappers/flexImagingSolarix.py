@@ -23,7 +23,7 @@ class flexImagingSolarix(solarixMapper):
         Save the instrument file of the provided list of blobs
         filename: the file to write to
         blobs: list of blob targets to save
-        file format is a space deliniated x, y, name, region
+        file format is a space delimited x, y, name, region
         '''
         if blobs is None or len(blobs) == 0:
             return

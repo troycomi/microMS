@@ -22,7 +22,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
     '''
     def __init__(self):
         '''
-        intialize a new microMSQT window, setting up the layout and some instance variables
+        initialize a new microMSQT window, setting up the layout and some instance variables
         '''
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -870,7 +870,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         
     def gridPopup(self):
         '''
-        popup a window to edit the intermeidate map of the mapper instance
+        popup a window to edit the intermediate map of the mapper instance
         '''
         self.popups['grid'].loadParams(self.model)
         self.popups['grid'].show()
@@ -1177,7 +1177,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
 
     def requestFiducialInput(self, defaultStr):
         '''
-        Method for microMSModel to recieve input from the user
+        Method for microMSModel to receive input from the user
         defaultStr: the string to initially display to the user
         '''
         return QtWidgets.QInputDialog.getText(self,'Coordinate Dialog', 

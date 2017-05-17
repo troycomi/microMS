@@ -40,7 +40,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         converts the entered point to a physical coordinate
         in simplest case can just parse the input, could require other conversions
         inStr: user entry, should be validated prior to passing in
-        returns a tuple in pysical coordinates
+        returns a tuple in physical coordinates
         '''
     
     @abc.abstractmethod
@@ -56,7 +56,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def predictLabel(self, physPoint):
         '''
-        given a phyisical position of a registration point, the label to draw on the image
+        given a physical position of a registration point, the label to draw on the image
         can be a 'named' coordinate or a short position
         '''
 
@@ -187,7 +187,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         '''
         helper method for inverting a physical point to a pixel position
         physPoint: (x,y) coordinate of physical position
-        reflected: boolean toggle to indicate if the coordinate spaces are relfections
+        reflected: boolean toggle to indicate if the coordinate spaces are reflections
         return (x,y) in pixel positions
         '''
         #not enough training points
