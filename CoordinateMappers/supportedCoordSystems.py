@@ -9,13 +9,15 @@ from CoordinateMappers import solarixMapper
 from CoordinateMappers import oMaldiMapper
 from CoordinateMappers import zaberMapper
 from CoordinateMappers import flexImagingSolarix
+from CoordinateMappers import srsMapper
 
 ###add new mapper instance here
 supportedMappers = [ultraflexMapper.ultraflexMapper(),
                     solarixMapper.solarixMapper(),
                     flexImagingSolarix.flexImagingSolarix(),
                     oMaldiMapper.oMaldiMapper(),
-                    zaberMapper.zaberMapper()]
+                    zaberMapper.zaberMapper(),
+                    srsMapper.srsMapper()]
 
 
 #check for defined names here
