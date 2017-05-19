@@ -79,10 +79,11 @@ class srsMapper(coordinateMapper.CoordinateMapper):
             return
         output = open(filename, 'w')
         for p in blobs:
+            motor = self.translate((p.X, p.Y))
             if p.group is not None:
-                output.write('{0:.0f}\t{1:.0f}\t{2}\n'.format(p.X, p.Y, p.group))
+                output.write('x_{0:.0f}y_{1:.0f}\t{2:.0f}\t{3:.0f}\t{4}\n'.format(p.X, p.Y, motor[0], motor[1], p.group))
             else:
-                output.write('{0:.0f}\t{1:.0f}\n'.format(p.X, p.Y))
+                output.write('x_{0:.0f}y_{1:.0f}\t{2:.0f}\t{3:.0f}\n'.format(p.X, p.Y, motor[0], motor[1]))
         output.close()
 
     def loadInstrumentFile(self, filename):
@@ -97,12 +98,15 @@ class srsMapper(coordinateMapper.CoordinateMapper):
 
         for l in reader.readlines():
             toks = l.split('\t')
-            if len(toks) == 3:
-                #group is encoded
-                result.append(blob.blob(float(toks[0]), float(toks[1]), group = int(toks[2])))
+            pos = toks[0].split('_')
+            #parse pixel position and group
+            x = int(pos[1][:-1])
+            y = int(pos[2])
+            if len(toks) == 4:
+                s = int(toks[3])
+                result.append(blob.blob(x = x, y = y, group = s))
             else:
-                #no group
-                result.append(blob.blob(float(toks[0]), float(toks[1])))
+                result.append(blob.blob(x = x, y = y))
 
         return result
 
