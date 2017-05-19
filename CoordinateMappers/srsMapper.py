@@ -24,7 +24,7 @@ class srsMapper(coordinateMapper.CoordinateMapper):
         returns true if extract point will successfully parse
         '''
         if ' ' in inStr:
-            toks = instrumentExtentions.split(' ')
+            toks = inStr.split(' ')
             try:
                 float(toks[0])
                 float(toks[1])
