@@ -50,9 +50,12 @@ class srsMapper(coordinateMapper.CoordinateMapper):
     def predictName(self, pixelPoint):
         '''
         Predicts the physical location from the pixel position.
-        No set positions so return ''
+        Returns the predicted physical, motor position
         '''
-        return ''
+        if len(self.physPoints) < 2:
+            return ''
+        phys = self.translate(pixelPoint)
+        return '{0:.0f} {1:.0f}'.format(phys[0], phys[1])
 
     def predictLabel(self, physPoint):
         '''
@@ -60,7 +63,7 @@ class srsMapper(coordinateMapper.CoordinateMapper):
         Since there are no set, named points for the stage this always returns a blank string
         physPoint: (x,y) tuple in physical coordinate space
         '''
-        return ''
+        return '{0:.0f} {1:.0f}'.format(physPoint[0], physPoint[1])
 
     def predictedPoints(self):
         '''
