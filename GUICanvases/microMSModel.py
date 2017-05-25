@@ -71,7 +71,7 @@ class MicroMSModel(object):
         self.coordinateMapper = newMapper
         self.coordinateMapper.clearPoints()
 
-    def saveEntirePlot(self, fileName):
+    def saveEntirePlot(self, fileName, ROI = None):
         '''
         saves the entire slide image at the current zoom level
         fileName: the file to write to
@@ -79,11 +79,27 @@ class MicroMSModel(object):
         '''
         #save the current size and position
         size, pos = self.slide.size, self.slide.pos
-        #match size to whole slide, position at center
-        self.slide.size, self.slide.pos = \
-            (self.slide.dimensions[0]//2**self.slide.lvl, 
-             self.slide.dimensions[1]//2**self.slide.lvl), \
-            (self.slide.dimensions[0]//2, self.slide.dimensions[1]//2)
+        if ROI is None:
+            #match size to whole slide, position at center
+            self.slide.size, self.slide.pos = \
+                (self.slide.dimensions[0]//2**self.slide.lvl, 
+                    self.slide.dimensions[1]//2**self.slide.lvl), \
+                (self.slide.dimensions[0]//2, self.slide.dimensions[1]//2)
+        else:
+            #limit to just the ROI bounds
+            minx = maxx = ROI[0][0]
+            miny = maxy = ROI[0][1]
+            for r in ROI:
+                minx = minx if minx < r[0] else r[0]
+                maxx = maxx if maxx > r[0] else r[0]
+                miny = miny if miny < r[1] else r[1]
+                maxy = maxy if maxy > r[1] else r[1]
+
+            self.slide.size = ((maxx-minx) // 2 **self.slide.lvl, (maxy-miny) //2**self.slide.lvl)
+            self.slide.pos = ((maxx-minx) // 2 + minx, (maxy-miny) //2 + miny)
+
+            self.slide.size = [int(i) for i in self.slide.size]
+            self.slide.pos = [int(i) for i in self.slide.pos]
         
         #get whole image
         wholeImg = self.slide.getImg()
@@ -109,6 +125,11 @@ class MicroMSModel(object):
                                            str(gb.group),
                                             font=tfont, fill=GUIConstants.EXPANDED_TEXT)
                             drawnlbls.add(gb.group)
+        #roi
+        if ROI is not None:
+            ROI = [self.slide.getLocalPoint(r) for r in ROI]
+            ROI.append(ROI[0])
+            draw.line([(x[0], x[1]) for x in ROI], fill = GUIConstants.ROI)
         
         #save image
         wholeImg.save(fileName)

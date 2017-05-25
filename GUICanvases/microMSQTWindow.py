@@ -318,6 +318,17 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         Can produce large images!!
         '''
         if extras is None or not hasattr(extras, 'fileName'):
+            roi = self.model.blobCollection[self.model.currentBlobs].ROI
+            if len(roi) > 2:                
+                reply = QtWidgets.QMessageBox.question(self, 'Limit Image?',
+                                                   'Export just the current ROI?',
+                                                   buttons = QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes,
+                                                   defaultButton = QtWidgets.QMessageBox.Yes)
+                if reply == QtWidgets.QMessageBox.No:
+                    roi = None
+
+            else:
+                roi = None
             fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
@@ -330,7 +341,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
             fileName = extras.fileName
 
         if fileName:
-            self.model.saveEntirePlot(fileName)
+            self.model.saveEntirePlot(fileName, roi)
             if extras is None or not hasattr(extras, 'fileName'):
                 msg = QtWidgets.QMessageBox(self)
                 msg.setText("Finished saving")
