@@ -64,7 +64,7 @@ class solarixMapper(brukerMapper.brukerMapper):
         '''
         saves an instrument file of the provided list of blobs
         filename: the file to write to
-            if more than 900 points, uses filename as a base name
+            if more than 400 points, uses filename as a base name
         blobs: list of target positions
         '''
         if blobs is None or len(blobs) == 0:
