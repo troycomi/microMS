@@ -508,26 +508,32 @@ class MicroMSModel(object):
                      for p in points]
                 )
 
-        #draw fiducial locations, showing the worst FLE in a different color
-        worstI = -1
+            
+        #draw fiducial labels, color blended by deviation
         if len(self.coordinateMapper.physPoints) > 2:
-            worstI = self.coordinateMapper.highestDeviation()
+            deviations = self.coordinateMapper.squareErrors()
+            
+            #scale between 0 and 1
+            mind = min(deviations)
+            maxd = max(deviations)
+            deviations = [ (x - mind) / (maxd - mind) for x in deviations]
+        else:
+            deviations = [ 0, 0 ]
+
+        good = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL)
+        bad = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL_WORST)
+
         points, inds = self.slide.getPointsInBounds(self.coordinateMapper.pixelPoints)
         for i,p in enumerate(points):
-            if inds[i] == worstI:
-                ptches.append(
-                    plt.Circle(p, GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
-                               color = GUIConstants.FIDUCIAL_WORST,
-                               linewidth = lineWid,
-                               fill=False)
-                    )
-            else:
-                ptches.append(
-                    plt.Circle(p, GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
-                               color = GUIConstants.FIDUCIAL,
-                               linewidth = lineWid,
-                               fill=False)
-                    )
+            #blend color based on deviation
+            d = deviations[inds[i]]
+            col = tuple(d * x + (1-d) * y for x,y in zip(bad, good))
+            ptches.append(
+                plt.Circle(p, GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
+                            color = col,
+                            linewidth = lineWid,
+                            fill=False)
+                )
 
         #draw region of interest
         ptches.extend(self.getROIPatches())
@@ -587,16 +593,26 @@ class MicroMSModel(object):
 
         #fiducial labels
         lineWid = 1 if 6-self.slide.lvl < 1 else 6-self.slide.lvl   
-        #draw fiducial labels, showing the worst FLE in a different color
-        worstI = -1
+        #draw fiducial labels, color blended by deviation
         if len(self.coordinateMapper.physPoints) > 2:
-            worstI = self.coordinateMapper.highestDeviation()
+            deviations = self.coordinateMapper.squareErrors()
+            
+            #scale between 0 and 1
+            mind = min(deviations)
+            maxd = max(deviations)
+            deviations = [ (x - mind) / (maxd - mind) for x in deviations]
+        else:
+            deviations = [ 0, 0 ]
+
+        good = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL)
+        bad = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL_WORST)
+
         points, inds = self.slide.getPointsInBounds(self.coordinateMapper.pixelPoints)
         for i,p in enumerate(points):
-            if inds[i] == worstI:
-                col = GUIConstants.FIDUCIAL_WORST
-            else:
-                col = GUIConstants.FIDUCIAL
+            #blend color based on deviation
+            d = deviations[inds[i]]
+            col = tuple(d * x + (1-d) * y for x,y in zip(bad, good))
+
             axes.text(p[0] + GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
                         p[1] - GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
                         self.coordinateMapper.predictLabel(self.coordinateMapper.physPoints[inds[i]]),
@@ -681,9 +697,14 @@ class MicroMSModel(object):
         if self.showThreshold:
             area,circ = self.blobCollection[self.currentBlobs].blobFinder.getBlobCharacteristics(localPoint)
             return "x = %d, y = %d r,g,b = %d,%d,%d\tArea = %d\tCirc = %.2f"%(point[0], point[1], r, g, b, area, circ)
+
+        #get fiducial localization error if in a fiducial
+        fle = self.coordinateMapper.getFLE(point, GUIConstants.FIDUCIAL_RADIUS)
+        if fle is not None:
+            return "x = %d, y = %d r,g,b = %d,%d,%d  FLE: %d"%(point[0], point[1], r, g, b, fle)
+
         #show rgb and x,y location
-        else:
-            return "x = %d, y = %d r,g,b = %d,%d,%d"%(point[0], point[1], r, g, b)
+        return "x = %d, y = %d r,g,b = %d,%d,%d"%(point[0], point[1], r, g, b)
 
     def reportFiducialRequest(self, localPoint, removePoint, extras = None):
         '''
@@ -723,9 +744,12 @@ class MicroMSModel(object):
                 #validate entry
                 if self.coordinateMapper.isValidEntry(text):
                     #add position to mapper
-                    self.coordinateMapper.addPoints(globalPos, 
+                    dev = self.coordinateMapper.addPoints(globalPos, 
                                                     self.coordinateMapper.extractPoint(text))
-                    return "%s added at %d,%d" % (text, globalPos[0], globalPos[1])
+                    if dev is None:
+                        return "%s added at %d,%d" % (text, globalPos[0], globalPos[1])
+                    else:
+                        return "%s added at %d,%d (FLE: %d)" % (text, globalPos[0], globalPos[1], dev)
                 else:
                     return "Invalid entry: {}".format(text)
 
