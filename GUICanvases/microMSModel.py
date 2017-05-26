@@ -71,7 +71,7 @@ class MicroMSModel(object):
         self.coordinateMapper = newMapper
         self.coordinateMapper.clearPoints()
 
-    def saveEntirePlot(self, fileName):
+    def saveEntirePlot(self, fileName, ROI = None):
         '''
         saves the entire slide image at the current zoom level
         fileName: the file to write to
@@ -79,11 +79,27 @@ class MicroMSModel(object):
         '''
         #save the current size and position
         size, pos = self.slide.size, self.slide.pos
-        #match size to whole slide, position at center
-        self.slide.size, self.slide.pos = \
-            (self.slide.dimensions[0]//2**self.slide.lvl, 
-             self.slide.dimensions[1]//2**self.slide.lvl), \
-            (self.slide.dimensions[0]//2, self.slide.dimensions[1]//2)
+        if ROI is None:
+            #match size to whole slide, position at center
+            self.slide.size, self.slide.pos = \
+                (self.slide.dimensions[0]//2**self.slide.lvl, 
+                    self.slide.dimensions[1]//2**self.slide.lvl), \
+                (self.slide.dimensions[0]//2, self.slide.dimensions[1]//2)
+        else:
+            #limit to just the ROI bounds
+            minx = maxx = ROI[0][0]
+            miny = maxy = ROI[0][1]
+            for r in ROI:
+                minx = minx if minx < r[0] else r[0]
+                maxx = maxx if maxx > r[0] else r[0]
+                miny = miny if miny < r[1] else r[1]
+                maxy = maxy if maxy > r[1] else r[1]
+
+            self.slide.size = ((maxx-minx) // 2 **self.slide.lvl, (maxy-miny) //2**self.slide.lvl)
+            self.slide.pos = ((maxx-minx) // 2 + minx, (maxy-miny) //2 + miny)
+
+            self.slide.size = [int(i) for i in self.slide.size]
+            self.slide.pos = [int(i) for i in self.slide.pos]
         
         #get whole image
         wholeImg = self.slide.getImg()
@@ -109,6 +125,11 @@ class MicroMSModel(object):
                                            str(gb.group),
                                             font=tfont, fill=GUIConstants.EXPANDED_TEXT)
                             drawnlbls.add(gb.group)
+        #roi
+        if ROI is not None:
+            ROI = [self.slide.getLocalPoint(r) for r in ROI]
+            ROI.append(ROI[0])
+            draw.line([(x[0], x[1]) for x in ROI], fill = GUIConstants.ROI)
         
         #save image
         wholeImg.save(fileName)
@@ -196,7 +217,7 @@ class MicroMSModel(object):
         blobs = self.blobCollection[self.currentBlobs].blobs
         #if maxPoints is valid
         if maxPoints is not None and maxPoints > 0 and maxPoints < self.currentBlobLength():
-            #obtain a randome sample of blobs
+            #obtain a random sample of blobs
             blobs = random.sample(blobs,maxPoints)
                          
         #if tspOpt is requested       
@@ -248,7 +269,7 @@ class MicroMSModel(object):
 
     def loadBlobFinding(self, filename):
         '''
-        Loads the blobs in the provided filename to the current list of blobs and sets the blobfinder to the preivous values
+        Loads the blobs in the provided filename to the current list of blobs and sets the blobfinder to the previous values
         filename: file to load
         '''
         self.blobCollection[self.currentBlobs].loadBlobs(filename)
@@ -487,26 +508,32 @@ class MicroMSModel(object):
                      for p in points]
                 )
 
-        #draw fiducial locations, showing the worst FLE in a different color
-        worstI = -1
+            
+        #draw fiducial labels, color blended by deviation
         if len(self.coordinateMapper.physPoints) > 2:
-            worstI = self.coordinateMapper.highestDeviation()
+            deviations = self.coordinateMapper.squareErrors()
+            
+            #scale between 0 and 1
+            mind = min(deviations)
+            maxd = max(deviations)
+            deviations = [ (x - mind) / (maxd - mind) for x in deviations]
+        else:
+            deviations = [ 0, 0 ]
+
+        good = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL)
+        bad = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL_WORST)
+
         points, inds = self.slide.getPointsInBounds(self.coordinateMapper.pixelPoints)
         for i,p in enumerate(points):
-            if inds[i] == worstI:
-                ptches.append(
-                    plt.Circle(p, GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
-                               color = GUIConstants.FIDUCIAL_WORST,
-                               linewidth = lineWid,
-                               fill=False)
-                    )
-            else:
-                ptches.append(
-                    plt.Circle(p, GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
-                               color = GUIConstants.FIDUCIAL,
-                               linewidth = lineWid,
-                               fill=False)
-                    )
+            #blend color based on deviation
+            d = deviations[inds[i]]
+            col = tuple(d * x + (1-d) * y for x,y in zip(bad, good))
+            ptches.append(
+                plt.Circle(p, GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
+                            color = col,
+                            linewidth = lineWid,
+                            fill=False)
+                )
 
         #draw region of interest
         ptches.extend(self.getROIPatches())
@@ -566,16 +593,26 @@ class MicroMSModel(object):
 
         #fiducial labels
         lineWid = 1 if 6-self.slide.lvl < 1 else 6-self.slide.lvl   
-        #draw fiducial labels, showing the worst FLE in a different color
-        worstI = -1
+        #draw fiducial labels, color blended by deviation
         if len(self.coordinateMapper.physPoints) > 2:
-            worstI = self.coordinateMapper.highestDeviation()
+            deviations = self.coordinateMapper.squareErrors()
+            
+            #scale between 0 and 1
+            mind = min(deviations)
+            maxd = max(deviations)
+            deviations = [ (x - mind) / (maxd - mind) for x in deviations]
+        else:
+            deviations = [ 0, 0 ]
+
+        good = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL)
+        bad = mpl.colors.colorConverter.to_rgb(GUIConstants.FIDUCIAL_WORST)
+
         points, inds = self.slide.getPointsInBounds(self.coordinateMapper.pixelPoints)
         for i,p in enumerate(points):
-            if inds[i] == worstI:
-                col = GUIConstants.FIDUCIAL_WORST
-            else:
-                col = GUIConstants.FIDUCIAL
+            #blend color based on deviation
+            d = deviations[inds[i]]
+            col = tuple(d * x + (1-d) * y for x,y in zip(bad, good))
+
             axes.text(p[0] + GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
                         p[1] - GUIConstants.FIDUCIAL_RADIUS/2**self.slide.lvl,
                         self.coordinateMapper.predictLabel(self.coordinateMapper.physPoints[inds[i]]),
@@ -660,16 +697,21 @@ class MicroMSModel(object):
         if self.showThreshold:
             area,circ = self.blobCollection[self.currentBlobs].blobFinder.getBlobCharacteristics(localPoint)
             return "x = %d, y = %d r,g,b = %d,%d,%d\tArea = %d\tCirc = %.2f"%(point[0], point[1], r, g, b, area, circ)
+
+        #get fiducial localization error if in a fiducial
+        fle = self.coordinateMapper.getFLE(point, GUIConstants.FIDUCIAL_RADIUS)
+        if fle is not None:
+            return "x = %d, y = %d r,g,b = %d,%d,%d  FLE: %d"%(point[0], point[1], r, g, b, fle)
+
         #show rgb and x,y location
-        else:
-            return "x = %d, y = %d r,g,b = %d,%d,%d"%(point[0], point[1], r, g, b)
+        return "x = %d, y = %d r,g,b = %d,%d,%d"%(point[0], point[1], r, g, b)
 
     def reportFiducialRequest(self, localPoint, removePoint, extras = None):
         '''
         handles a fiducial request.
         localpoint: (x,y) tuple in the image coordinate system
         removePoint: boolean toggle.  If true, the closest fiducial is removed
-        extras: a debuging object to bypass GUI display. Must define text and ok
+        extras: a debugging object to bypass GUI display. Must define text and ok
         '''
         #no slide to register against
         if self.slide is None:
@@ -702,9 +744,12 @@ class MicroMSModel(object):
                 #validate entry
                 if self.coordinateMapper.isValidEntry(text):
                     #add position to mapper
-                    self.coordinateMapper.addPoints(globalPos, 
+                    dev = self.coordinateMapper.addPoints(globalPos, 
                                                     self.coordinateMapper.extractPoint(text))
-                    return "%s added at %d,%d" % (text, globalPos[0], globalPos[1])
+                    if dev is None:
+                        return "%s added at %d,%d" % (text, globalPos[0], globalPos[1])
+                    else:
+                        return "%s added at %d,%d (FLE: %d)" % (text, globalPos[0], globalPos[1], dev)
                 else:
                     return "Invalid entry: {}".format(text)
 
@@ -732,7 +777,7 @@ class MicroMSModel(object):
 
     def requestInstrumentMove(self, localPoint):
         '''
-        Handles requests for moving the connected istrument
+        Handles requests for moving the connected instrument
         localPoint: (x,y) tuple in the current image coordinate system
         returns a string summarizing the effect of the action
         '''

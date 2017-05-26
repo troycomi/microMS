@@ -1,5 +1,6 @@
 import abc
 import numpy as np
+import math
 
 from ImageUtilities import blob
 
@@ -40,7 +41,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         converts the entered point to a physical coordinate
         in simplest case can just parse the input, could require other conversions
         inStr: user entry, should be validated prior to passing in
-        returns a tuple in pysical coordinates
+        returns a tuple in physical coordinates
         '''
     
     @abc.abstractmethod
@@ -56,7 +57,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def predictLabel(self, physPoint):
         '''
-        given a phyisical position of a registration point, the label to draw on the image
+        given a physical position of a registration point, the label to draw on the image
         can be a 'named' coordinate or a short position
         '''
 
@@ -138,6 +139,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         '''
         Adds the provided x,y tuples to the appropriate lists
         Does some type checking and signals the need for a pbsr update
+        Returns the FLE if more than 3 points are present (ie if this is the third)
         pixelPoint: (x,y) tuple in global pixel space
         physPoint: (x,y) tuple of physical coordinate
         '''
@@ -150,6 +152,12 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
             self.physPoints.append(physPoint)
             self.pixelPoints.append(pixelPoint)
             self.update = True
+
+            if len(self.physPoints) > 3:
+                pred = self.translate(pixelPoint)
+                return math.sqrt((physPoint[0] - pred[0])**2 + (physPoint[1] - pred[1])**2)
+            
+        return None
 
     def clearPoints(self):
         '''
@@ -187,7 +195,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         '''
         helper method for inverting a physical point to a pixel position
         physPoint: (x,y) coordinate of physical position
-        reflected: boolean toggle to indicate if the coordinate spaces are relfections
+        reflected: boolean toggle to indicate if the coordinate spaces are reflections
         return (x,y) in pixel positions
         '''
         #not enough training points
@@ -291,23 +299,38 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
         returns the index of pixelPoints with the highest deviation
         in target registration error
         '''
+
+        #return max deviation
+        return np.argmax(self.squareErrors())
+
+    def squareErrors(self):
+        '''
+        returns a list of the squared errors for each point in terms of physical distance
+        '''
         if len(self.physPoints) < 2:
             raise KeyError('Not enough training points')
-            
-        #update as needed
-        if self.update == True:
-            self.PBSR()
-            self.update = False
-            
-        #get all predicted pixel positions
-        predPixPoints = list(map(lambda x: self.invert(x), self.physPoints))
+
+        #get all predicted physical positions
+        predPoints = list(map(lambda x: self.translate(x), self.pixelPoints))
         dists = []
         #calculate deviations (dist squared)
-        for i in range(len(predPixPoints)):
-            dists.append((self.pixelPoints[i][0] - predPixPoints[i][0])**2 + 
-                         (self.pixelPoints[i][1] - predPixPoints[i][1])**2)
-        #return max deviation
-        return np.argmax(dists)
+        for i in range(len(predPoints)):
+            dists.append((self.physPoints[i][0] - predPoints[i][0])**2 + 
+                         (self.physPoints[i][1] - predPoints[i][1])**2)
+
+        return dists
+
+    def getFLE(self, pixelLoc, dist):
+        if len(self.physPoints) < 2:
+            return None
+
+        dist = dist**2
+        for i,p in enumerate(self.pixelPoints):
+            if (p[0] - pixelLoc[0])**2 + (p[1] - pixelLoc[1])**2 < dist:
+                phys = self.translate(p)
+                return math.sqrt((self.physPoints[i][0]- phys[0])**2 + (self.physPoints[i][1]-phys[1])**2)
+
+        return None
          
     def loadRegistration(self, filename):
         '''

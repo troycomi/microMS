@@ -22,7 +22,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
     '''
     def __init__(self):
         '''
-        intialize a new microMSQT window, setting up the layout and some instance variables
+        initialize a new microMSQT window, setting up the layout and some instance variables
         '''
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -318,6 +318,17 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         Can produce large images!!
         '''
         if extras is None or not hasattr(extras, 'fileName'):
+            roi = self.model.blobCollection[self.model.currentBlobs].ROI
+            if len(roi) > 2:                
+                reply = QtWidgets.QMessageBox.question(self, 'Limit Image?',
+                                                   'Export just the current ROI?',
+                                                   buttons = QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes,
+                                                   defaultButton = QtWidgets.QMessageBox.Yes)
+                if reply == QtWidgets.QMessageBox.No:
+                    roi = None
+
+            else:
+                roi = None
             fileName = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Select save file",
                                                      self.directory,
@@ -330,7 +341,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
             fileName = extras.fileName
 
         if fileName:
-            self.model.saveEntirePlot(fileName)
+            self.model.saveEntirePlot(fileName, roi)
             if extras is None or not hasattr(extras, 'fileName'):
                 msg = QtWidgets.QMessageBox(self)
                 msg.setText("Finished saving")
@@ -870,7 +881,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
         
     def gridPopup(self):
         '''
-        popup a window to edit the intermeidate map of the mapper instance
+        popup a window to edit the intermediate map of the mapper instance
         '''
         self.popups['grid'].loadParams(self.model)
         self.popups['grid'].show()
@@ -1177,7 +1188,7 @@ class MicroMSQTWindow(QtWidgets.QMainWindow):
 
     def requestFiducialInput(self, defaultStr):
         '''
-        Method for microMSModel to recieve input from the user
+        Method for microMSModel to receive input from the user
         defaultStr: the string to initially display to the user
         '''
         return QtWidgets.QInputDialog.getText(self,'Coordinate Dialog', 

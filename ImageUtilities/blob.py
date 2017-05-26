@@ -38,7 +38,7 @@ class blob(object):
     def blobFromSplitString(instrings):
         '''
         Tries to parse all information from a split string to make a new blob
-        instrings: list of strings, produced from spliting a blob.toString()
+        instrings: list of strings, produced from splitting a blob.toString()
         returns a new blob with the indicated x,y,r and circularity
         '''
         result = blob()
@@ -57,7 +57,7 @@ class blob(object):
 
     def toString(self):
         '''
-        Generates a tab delinated string with the x, y, radius and circularity of the blob
+        Generates a tab delimited string with the x, y, radius and circularity of the blob
         '''
         return "{0:.3f}\t{1:.3f}\t{2:.3f}\t{3:.3f}".format(self.X, self.Y, 
                                                            self.radius, self.circularity)

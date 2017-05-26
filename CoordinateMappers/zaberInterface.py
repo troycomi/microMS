@@ -21,7 +21,7 @@ class ZaberInterface(object, metaclass=abc.ABCMeta):
         super().__init__()
 
     '''
-    home and renumber don't recieve
+    home and renumber don't receive
     as they don't know the number of connected devices
     '''
     def home(self, device = 0):
@@ -39,12 +39,12 @@ class ZaberInterface(object, metaclass=abc.ABCMeta):
 
     def getPosition(self, device):
         '''
-        provides the current location of the reqested device
+        provides the current location of the requested device
         device: the device to query
         '''
         self._send(device, self.COMMANDS['CUR_POS'])
         (deviceOut, command, data) = self._receive()
-        #some times the recieves can get misaligned, hopefully this catches it!
+        #some times the receives can get misaligned, hopefully this catches it!
         if device == deviceOut:
             return data
         else:
@@ -100,7 +100,7 @@ class ZaberInterface(object, metaclass=abc.ABCMeta):
 
     def findPorts(self):
         '''
-        Querry each COM port for a possible connection.
+        Query each COM port for a possible connection.
         Will work for windows only
         '''
         result = []

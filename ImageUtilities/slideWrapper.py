@@ -35,7 +35,7 @@ class SlideWrapper(object):
         self.slides = []
         self.filetype = ex
             
-        #nanozoomer, ends in triple or brighfield
+        #nanozoomer, ends in triple or brightfield
         if ex == '.ndpi':
             #brightfield image selected
             if "Brightfield" == f[-11:]:
@@ -131,7 +131,7 @@ class SlideWrapper(object):
                                 imgs.append(splitOld[j])
                         fluorImg = Image.merge('RGBA', imgs)
 
-        #merge bright and fluroescence image, or return one of them
+        #merge bright and fluorescence image, or return one of them
         if brightImg is None and fluorImg is None:
             slideImg = Image.new("RGBA",self.size,"black")
         elif brightImg is not None and fluorImg is None:

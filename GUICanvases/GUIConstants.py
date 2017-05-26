@@ -8,7 +8,7 @@ TEMP_BLOB_FIND          =   'turquoise'
 PREDICTED_POINTS        =   'yellow'
 #color of circle and text of highest FLE 
 FIDUCIAL_WORST          =   'red'
-#color fo the rest of the fiducial circles and text
+#color of the rest of the fiducial circles and text
 FIDUCIAL                =   'blue'
 #background label of fiducial marks
 FIDUCIAL_LABEL_BKGRD    =   'white'

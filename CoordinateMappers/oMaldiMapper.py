@@ -135,7 +135,7 @@ class oMaldiMapper(coordinateMapper.CoordinateMapper):
                 else:
                     result.append(blob.blob(float(toks[0]), float(toks[1])))
         else:
-            print('{} continaing pixel positions not found!'.format(filename[0:-4] + '.txt'))
+            print('{} containing pixel positions not found!'.format(filename[0:-4] + '.txt'))
         return result
 
     def saveInstrumentFile(self, filename, blobs):  
@@ -224,7 +224,7 @@ class oMaldiMapper(coordinateMapper.CoordinateMapper):
     
     def getIntermediateMap(self):
         '''
-        The intermeidate map is hard coded for now
+        The intermediate map is hard coded for now
         '''
         return [('Not in use', 0, 0)]
 

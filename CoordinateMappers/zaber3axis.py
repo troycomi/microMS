@@ -45,7 +45,7 @@ class Zaber3Axis(zaberInterface.ZaberInterface,
         except:
             self.connected = False
             return
-        #set the conncetion to true
+        #set the connection to true
         self.connected = True
         #renumber to make sure all ids are unique and as expected
         self.renumber()
@@ -77,7 +77,7 @@ class Zaber3Axis(zaberInterface.ZaberInterface,
         '''
         Performs multiple receive calls and checks for rejections
         numreads: the number of reads to perform
-        returns true if no errors or rejections occured
+        returns true if no errors or rejections occurred
         '''
         if not self.connected:
             return
@@ -219,7 +219,7 @@ class Zaber3Axis(zaberInterface.ZaberInterface,
         '''
         Move the probe relative to the current position
         direction: a valid connectedInstrument.Direction
-        isBigStep: toggle for having a larget step size
+        stepSize: a StepSize enum determining the step size
         '''
         #do nothing without a connection
         if not self.connected:

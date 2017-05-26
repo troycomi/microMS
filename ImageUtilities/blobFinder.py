@@ -115,7 +115,7 @@ class blobFinder(object):
         '''
         Gets the area and circularity for a blob containing the supplied point
         Returns 0,0 if no blob containing point
-        pnt: (x,y) of the reqested point
+        pnt: (x,y) of the requested point
         '''
         #get current image
         img = self.slide.getImg()
@@ -127,7 +127,7 @@ class blobFinder(object):
         for i in range(num):
             s = slices[i]
             dx, dy = s[:2]
-            #check if piont is within the bounds of the blob
+            #check if point is within the bounds of the blob
             if dx.start < pnt[1] and dx.stop > pnt[1] and \
                 dy.start < pnt[0] and dy.stop > pnt[0]:
                 #convert blob to boolean image
@@ -240,7 +240,7 @@ class blobFinder(object):
         xs = np.arange(topL[0] + subSize//2, botR[0]+subSize//2, subSize-overlap)
         ys = np.arange(topL[1] + subSize//2, botR[1]+subSize//2, subSize-overlap)
         
-        #cortesian product of xs and ys
+        #cartesian product of xs and ys
         centers = product(xs,ys)
 
         #initialize time, blob list, and iterator count
