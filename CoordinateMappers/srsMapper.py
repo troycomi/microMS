@@ -228,6 +228,7 @@ class srsMapper(coordinateMapper.CoordinateMapper):
         #clear list
         self.physPoints = []
         self.pixelPoints = []
+        self.focusPoints = []
         
         infile = open(filename, 'r')
         
@@ -246,9 +247,9 @@ class srsMapper(coordinateMapper.CoordinateMapper):
             self.pixelPoints.append((int(float(toks[0])), int(float(toks[1]))))
             self.physPoints.append((float(toks[2]), float(toks[3])))
             if toks[4] == 'None':
-                self.focusPlane.append(None)
+                self.focusPoints.append(None)
             else:
-                self.focusPlane.append(float(toks[4]))
+                self.focusPoints.append(float(toks[4]))
             l = infile.readline()
         #update pbsr if possible
         if len(self.physPoints) > 2:
