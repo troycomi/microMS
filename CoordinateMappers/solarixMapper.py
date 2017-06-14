@@ -20,6 +20,33 @@ class solarixMapper(brukerMapper.brukerMapper):
         self.instrumentName = 'solariX'
         super().__init__()
         self.reflectCoordinates = True
+        
+        self.header = ('<!-- $Revision: 1.5 $-->\n'
+        '<PlateType>\n'
+        '\t<GlobalParameters PlateTypeName="MTP Slide Adapter II" ProbeType="MTP"\n'
+        '\t                  RowsNumber="0" ChipNumber="1" ChipsInRow="1"\n'#overwrite the "RowsNumber" from ultraflex/bruker mapper
+        '\t                  X_ChipOffsetSize="0" Y_ChipOffsetSize="0"\n'
+        '\t                  HasDirectLabels="false" HasColRowLabels="true"\n'
+        '\t                  HasNearNeighbourCalibrants="false"\n'
+        '\t                  ProbeDiameterX="103.5" SampleDiameter="2"\n'
+        '\t                  SamplePixelRadius="5" ZoomFactor="1"\n'
+        '\t                  FirstCalibrant="TPX1" SecondCalibrant="TPX2" ThirdCalibrant="TPX3"\n'
+        '\t                  />\n'
+        '\t<MappingParameters mox="56.239998" moy="42.635009" sinphi="0.000000" cosphi="1.000000" '
+         'alpha="51.750000" beta="51.750000" tansigma="0.000000"/>\n')
+         
+        self.footer = """\t</PlateSpots>
+    	<AutoTeachSpots>
+    		<PlateSpot PositionIndex="0" PositionName="TPX1" UnitCoord_X="-0.729469" UnitCoord_Y="0.550725"/>
+    		<PlateSpot PositionIndex="1" PositionName="TPX2" UnitCoord_X="0.729469" UnitCoord_Y="0.550725"/>
+    		<PlateSpot PositionIndex="2" PositionName="TPX3" UnitCoord_X="0.729469" UnitCoord_Y="0.057971"/>
+    		<PlateSpot PositionIndex="3" PositionName="TPX4" UnitCoord_X="-0.729469" UnitCoord_Y="0.057971"/>
+    		<PlateSpot PositionIndex="4" PositionName="TPY1" UnitCoord_X="-0.729469" UnitCoord_Y="-0.057971"/>
+    		<PlateSpot PositionIndex="5" PositionName="TPY2" UnitCoord_X="0.729469" UnitCoord_Y="-0.057971"/>
+    		<PlateSpot PositionIndex="6" PositionName="TPY3" UnitCoord_X="-0.729469" UnitCoord_Y="-0.550725"/>
+    		<PlateSpot PositionIndex="7" PositionName="TPY4" UnitCoord_X="0.729469" UnitCoord_Y="-0.550725"/>
+    	</AutoTeachSpots>
+    </PlateType>"""      
 
     def isValidMotorCoord(self,instr):
         '''

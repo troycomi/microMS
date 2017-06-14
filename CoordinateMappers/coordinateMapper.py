@@ -292,6 +292,7 @@ class CoordinateMapper(object, metaclass=abc.ABCMeta):
             self.pixelPoints.pop(closestI)
             self.physPoints.pop(closestI)
             self.update = True
+            return closestI
 
             
     def highestDeviation(self):
