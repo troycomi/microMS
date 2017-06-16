@@ -113,6 +113,9 @@ class blobList(object):
         self.blobs = []
         for l in lines:
             toks = l.split('\t')
+            if len(toks) == 1 and toks[0][0] == 'x':
+                self.loadBlobsFromXY(lines)
+                break
             if len(toks) == 2:
                 #set blob finder parameters
                 self.blobFinder.setParameterFromSplitString(toks)
@@ -128,6 +131,13 @@ class blobList(object):
                     self.ROI = ast.literal_eval(l[5:])
 
         self.generateGroupLabels()
+
+    def loadBlobsFromXY(self, lines):
+        '''
+        Loads blobs from a text file of the form "x_{}y_{}" which is used frequently in bruker instruments
+        '''
+        for l in lines:
+            self.blobs.append(blob.blob.blobFromXYString(l));
 
     def blobRequest(self, globalPoint, radius):
         '''

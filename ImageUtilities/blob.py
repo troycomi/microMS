@@ -55,6 +55,25 @@ class blob(object):
             
         return result  
 
+    
+    @staticmethod
+    def blobFromXYString(instring):
+        '''
+        Parses xy location from string to make a new blob
+        instring: string of the form "x_{}y_{}"
+        returns a new blob with the indicated x,y
+        '''
+        result = blob()
+
+        if instring is None:
+            return result
+        
+        toks = instring.split('_')
+        result.X = float(toks[1][:-1])
+        result.Y = float(toks[2])
+            
+        return result  
+
     def toString(self):
         '''
         Generates a tab delimited string with the x, y, radius and circularity of the blob
