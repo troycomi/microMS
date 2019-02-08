@@ -15,17 +15,17 @@ In addition to base components the following packages are required:
 - [openslide](http://openslide.org/) and [openslide-python](https://github.com/openslide/openslide-python#installation)
 - [pyserial](https://pypi.python.org/pypi/pyserial)
 
-##Launching
+## Launching
 The main GUI is started by running the main script, microMS.py:
 ```
 python microMS.py
 ```
 On Windows, microMS.bat can launch the GUI as well.
 
-##Usage
+## Usage
 See the [user guide](UserGuideD2.pdf) for full documentation.
 
-##About
+## About
 The main GUI class is composed of widgets in the GUICanvas package for displaying a microscope image and population level statistics as a histogram.  Each widget interacts with microMSModel object, representing a microscopy experiment, a mass spectrometer system, and their interacting data.  
 
 A slideWrapper provides an object for interacting with a set of microscopy images representing brightfield and different fluorescence channel images.  The current field of view is maintained to simplify controller interaction with the image. The ImageUtilities package also contains modules for cell finding, patterning target positions, and optimizing travel paths.
